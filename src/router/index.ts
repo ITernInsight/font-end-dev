@@ -6,6 +6,11 @@ import QuestionView from '../views/QuestionView.vue'
 import PostDetail from '../views/PostDetail.vue'
 import ReviewDetail from '../views/ReviewDetail.vue'
 import QuestionDetail from '../views/QuestionDetail.vue'
+import AdminAddAnnounce from '../views/AdminAddAnnounce.vue'
+import AddReview from '../views/AddReview.vue'
+import AddQuestion from '../views/AddQuestion.vue'
+import EditAnnouncement from '../views/editAnnouncement.vue'
+import DetailAnnounce from '../views/DetailAnnounce.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -46,7 +51,32 @@ const router = createRouter({
           name:'questiondetails',
           component: QuestionDetail
         },
+                {
+          path: '/questions/:id',
+          name:'questiondetails',
+          component: QuestionDetail
+        },
       ]
+    },
+    {
+      path: '/adminaddannounce', 
+      component: AdminAddAnnounce,
+    },
+    {
+      path: '/addreview', 
+      component: AddReview,
+    },
+    {
+      path: '/addquestion', 
+      component: AddQuestion,
+    },
+    {
+      path: '/editannounce/:id', 
+      component: EditAnnouncement,
+    },
+    {
+      path: '/detailannounce/:id', 
+      component: DetailAnnounce,
     },
   ],
 })
