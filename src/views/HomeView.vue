@@ -60,12 +60,12 @@ const truncateDescription = (description) => {
           <!-- Dropdown Menu -->
           <div v-if="isDropdownOpen"
             class="absolute left-0 mt-2 py-2 bg-white border rounded shadow-lg text-light-text dark:bg-dark-background z-10">
-            <RouterLink to="/reviews"
+            <RouterLink to="/addreview"
               class="block px-4 py-2 text-light-text hover:text-hightlight dark:hover:bg-dark-secondary/5"
               @click="isDropdownOpen = false">
               Review
             </RouterLink>
-            <RouterLink to="/questions"
+            <RouterLink to="/addquestion"
               class="block px-4 py-2 text-light-text hover:text-hightlight dark:hover:bg-dark-secondary/5"
               @click="isDropdownOpen = false">
               Question
