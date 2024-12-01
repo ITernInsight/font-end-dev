@@ -6,11 +6,11 @@ import QuestionView from '../views/QuestionView.vue'
 import PostDetail from '../views/PostDetail.vue'
 import ReviewDetail from '../views/ReviewDetail.vue'
 import QuestionDetail from '../views/QuestionDetail.vue'
-import AdminAddAnnounce from '../views/AdminAddAnnounce.vue'
-import AddReview from '../views/AddReview.vue'
-import AddQuestion from '../views/AddQuestion.vue'
-import EditAnnouncement from '../views/editAnnouncement.vue'
-import DetailAnnounce from '../views/DetailAnnounce.vue'
+import AdminView from '@/views/admin/AdminView.vue'
+import AddAnnouce from '@/views/admin/AddAnnouce.vue'
+import EditAnnouce from '@/views/admin/EditAnnouce.vue'
+import AnnouceView from '@/views/admin/AnnouceView.vue'
+import DetailAnnouce from '@/views/admin/DetailAnnouce.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -20,63 +20,67 @@ const router = createRouter({
       name: 'home',
       component: HomeView,
       redirect: 'posts',
-      children:[
+      children: [
         {
           path: 'posts',
-          name:'posts',
+          name: 'posts',
           component: PostView,
         },
         {
-          path: '/posts/:id',
-          name:'postdetails',
-          component: PostDetail
+          path: 'posts/:id',
+          name: 'post details',
+          component: PostDetail,
         },
         {
           path: 'reviews',
-          name:'reviews',
+          name: 'reviews',
           component: ReviewView,
         },
         {
-          path: '/reviews/:id',
-          name:'reviewdetail',
-          component: ReviewDetail
+          path: 'reviews/:id',
+          name: 'review detail',
+          component: ReviewDetail,
         },
         {
           path: 'questions',
-          name:'questions',
+          name: 'questions',
           component: QuestionView,
         },
         {
-          path: '/questions/:id',
-          name:'questiondetails',
-          component: QuestionDetail
+          path: 'questions/:id',
+          name: 'question details',
+          component: QuestionDetail,
         },
-                {
-          path: '/questions/:id',
-          name:'questiondetails',
-          component: QuestionDetail
+      ],
+    },
+    {
+      path: '/admin',
+      name: 'admin',
+      component: AdminView,
+      redirect: '/admin/annouce',
+      meta: { requiresAuth: true, role: 'admin' },
+      children: [
+        {
+          path: 'annouce',
+          name: 'annouce',
+          component: AnnouceView,
         },
-      ]
+        {
+          path: 'annouce/:id',
+          name: 'annouce details',
+          component: DetailAnnouce,
+        },
+      ],
     },
     {
-      path: '/adminaddannounce', 
-      component: AdminAddAnnounce,
+      path: '/admin/add-annouce',
+      name: 'add annouce',
+      component: AddAnnouce,
     },
     {
-      path: '/addreview', 
-      component: AddReview,
-    },
-    {
-      path: '/addquestion', 
-      component: AddQuestion,
-    },
-    {
-      path: '/editannounce/:id', 
-      component: EditAnnouncement,
-    },
-    {
-      path: '/detailannounce/:id', 
-      component: DetailAnnounce,
+      path: '/admin/edit-annouce/:id',
+      name: 'edit annouce',
+      component: EditAnnouce,
     },
   ],
 })

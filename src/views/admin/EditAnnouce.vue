@@ -1,0 +1,352 @@
+<script setup lang="ts">
+import router from '@/router'
+import axios from 'axios'
+import { computed, onMounted, ref } from 'vue'
+import { useRoute } from 'vue-router'
+
+interface Company {
+  id: number
+  companyName: string
+}
+
+interface Post {
+  id: number
+  title: string
+  description: string
+  position: string[]
+  startDate: Date | null
+  endDate: Date
+  email: string
+  tel: string
+  company: Company
+}
+
+const post = ref<Post | null>(null)
+const companies = ref<Company[]>([])
+const title = ref('')
+const companyName = ref('')
+const position = ref(<string[]>[])
+const description = ref('')
+const email = ref('')
+const tel = ref('')
+// const startDate = ref<Date | null>(null);
+const startDate = ref<string | null>(null)
+const endDate = ref<string>('')
+const companyId = ref<number>(0)
+
+const errorMessages = ref<string[]>([])
+const showError = ref(false)
+
+const isLoading = ref(true)
+const route = useRoute()
+const postId = route.params.id
+
+const EditAnnoucement = async () => {
+  try {
+    const response = await axios.put(`http://localhost:3000/posts/${postId}`, {
+      title: title.value,
+      description: description.value,
+      position: position.value,
+      email: email.value,
+      tel: tel.value,
+      startDate: startDate.value ? new Date(startDate.value) : null,
+      endDate: new Date(endDate.value),
+      companyId: companyId.value,
+    })
+
+    router.push('/admin/annouce')
+    console.log('Announcement added successfully:', response.data)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (error: any) {
+    if (error.response && error.response.data && error.response.data.message) {
+      const messages = error.response.data.message
+      console.log('Validation errors:', messages)
+      errorMessages.value = messages
+    } else {
+      console.error('Error adding announcement:', error)
+    }
+  }
+}
+
+
+
+const closeErrorPopup = () => {
+  showError.value = false
+}
+
+const formatstartDate = (date: Date | null): string | null => {
+  if (!date) return null
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0') // Months are zero-based
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+const formatendDate = (date: Date): string => {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0') // Months are zero-based
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+const fetchPostDetail = async () => {
+  try {
+    const response = await axios.get(`http://localhost:3000/posts/${postId}`)
+    // Extract relevant data directly from the single object response
+    const postData = response.data
+    post.value = {
+      id: postData.id,
+      title: postData.title,
+      description: postData.description,
+      position: postData.position,
+      startDate: postData.startDate ? new Date(postData.startDate) : null,
+      endDate: new Date(postData.endDate),
+      email: postData.email,
+      tel: postData.tel,
+      company: {
+        id: postData.company.id,
+        companyName: postData.company.companyName,
+      },
+    }
+
+    title.value = post.value.title
+    description.value = post.value.description
+    position.value = post.value.position
+    startDate.value = formatstartDate(post.value.startDate)
+    endDate.value = formatendDate(post.value.endDate)
+    email.value = post.value.email
+    tel.value = post.value.tel
+    companyId.value = post.value.company.id
+    companyName.value = post.value.company.companyName
+    search.value = post.value.company.companyName
+
+  } catch (error) {
+    console.error('Error fetching data:', error)
+  } finally {
+    isLoading.value = false
+  }
+}
+
+const fetchCompany = async () => {
+  try {
+    const response = await axios.get<Company[]>('http://localhost:3000/companies')
+    const companyData = response.data
+    companies.value = companyData.map((company) => ({
+      id: company.id,
+      companyName: company.companyName,
+    }))
+  } catch (error) {
+    console.error('Error fetching data', error)
+  }
+}
+
+onMounted(() => {
+  fetchPostDetail()
+  fetchCompany()
+})
+
+const search = ref('')
+const isOpen = ref(false)
+const searchResult = computed(() => {
+  if (search.value === '') {
+    return []
+  }
+  const filteredCompanies = companies.value.filter((item) =>
+    item.companyName.toLowerCase().includes(search.value.toLowerCase()),
+  )
+
+  return filteredCompanies
+})
+
+const setSelectedId = (id: number, item: string) => {
+  isOpen.value = false
+  companyId.value = id
+  search.value = item
+}
+
+const handleInput = (event: Event) => {
+  isOpen.value = true
+  search.value = (event.target as HTMLInputElement).value
+}
+
+const formatPhone = (event: Event) => {
+  let value = (event.target as HTMLInputElement).value
+  value = value.replace(/\D/g, '')
+  if (value.length > 3 && value.length <= 6) {
+    value = `${value.slice(0, 3)}-${value.slice(3)}`
+  } else if (value.length > 6) {
+    value = `${value.slice(0, 3)}-${value.slice(3, 6)}-${value.slice(6, 10)}`
+  }
+  ;(event.target as HTMLInputElement).value = value
+}
+
+const positions = [
+  'Software Developer',
+  'Web Designer',
+  'Project Manager',
+  'QA Tester',
+  'Backend Developer',
+  'UX/UI Designer',
+  'Business Analyst',
+  'Full Stack Developer',
+  'Marketing Specialist',
+  'Data Science',
+  'Devops Developer',
+  'Data Analyst',
+]
+
+const isDropdownOpen = ref(false)
+
+const toggleDropdown = () => {
+  isDropdownOpen.value = !isDropdownOpen.value
+}
+</script>
+<template>
+  <div class="max-w-4xl mx-auto p-4">
+    <h1 class="text-center text-2xl font-bold mb-6 text-hightlight">Edit Announce</h1>
+    <form @submit.prevent="EditAnnoucement">
+      <div class="mb-4">
+        <label class="block font-semibold mb-1">Title <span class="text-red-500">*</span></label>
+        <input type="text" v-model="title" class="w-full border rounded-lg px-3 py-2" />
+      </div>
+      <div class="mb-4">
+        <label>Company <span class="text-red-500">*</span></label>
+        <input
+          type="text"
+          @input="handleInput"
+          v-model="search"
+          class="w-full border rounded-lg px-3 py-2"
+          required
+          placeholder="Select a company."
+        />
+        <ul v-show="searchResult.length && isOpen" class="border border-border">
+          <li
+            v-for="(company, index) in searchResult"
+            :key="index"
+            @click="setSelectedId(company.id, company.companyName)"
+            class="cursor-pointer hover:bg-surface p-1"
+          >
+            {{ company.companyName }}
+          </li>
+        </ul>
+        <ul v-if="searchResult.length === 0 && isOpen" class="border border-border">
+          <li class="p-1 text-primary">
+            No Company Found. You can
+            <a class="text-sm font-bold cursor-pointer underline">Create </a>new Company
+          </li>
+        </ul>
+      </div>
+
+      <!-- Dropdown position-->
+      <div class="relative mb-4">
+        <label>Position <span class="text-red-500">*</span></label>
+        <div
+          @click="toggleDropdown"
+          class="w-full border rounded-lg px-3 py-2 flex justify-between items-center cursor-pointer"
+        >
+          <span>{{ position.length > 0 ? position.join(', ') : 'Select Position' }}</span>
+          <i class="fa fa-chevron-down"></i>
+        </div>
+
+        <div
+          v-if="isDropdownOpen"
+          class="absolute w-full mt-1 bg-white border rounded shadow-md max-h-64 overflow-y-auto z-10"
+        >
+          <div
+            v-for="pos in positions"
+            :key="pos"
+            class="flex items-center px-3 py-2 hover:bg-blue-50 cursor-pointer"
+          >
+            <input
+              type="checkbox"
+              :value="pos"
+              v-model="position"
+              class="form-checkbox h-4 w-4 text-blue-600 mr-2"
+            />
+            <span>{{ pos }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="mb-4">
+        <label>Description <span class="text-red-500">*</span></label>
+        <textarea
+          v-model="description"
+          class="w-full border rounded-lg px-3 py-2"
+          rows="5"
+        ></textarea>
+      </div>
+      <div class="mb-4">
+        <label>Email <span class="text-red-500">*</span></label>
+        <input type="email" v-model="email" class="w-full border rounded-lg px-3 py-2" />
+      </div>
+
+      <div class="mb-4">
+        <label>Tel <span class="text-red-500">*</span></label>
+        <input
+          type="text"
+          v-model="tel"
+          @input="formatPhone"
+          class="w-full border rounded-lg px-3 py-2"
+        />
+      </div>
+
+      <div class="flex flex-row justify-start w-full gap-2 *:">
+        <div class="mb-4 flex flex-col w-full">
+          <label>Start Date</label>
+          <input
+            type="date"
+            v-model="startDate"
+            class="mt-1 border rounded-lg px-3 py-2"
+          />    
+        </div>
+        <div class="mb-4 flex flex-col w-full">
+          <label>End Date <span class="text-red-500">*</span></label>
+          <input
+            type="date"
+            v-model="endDate"
+            class="mt-1 border rounded-lg px-3 py-2"
+            :min="startDate ? startDate : undefined" 
+            required
+          />
+        </div>
+      </div>
+
+      <div class="flex justify-center space-x-4 mt-4">
+        <RouterLink
+          to="/admin/annouce"
+          type="button"
+          class="text-white text-xs font-bold bg-gradient-to-b from-button px-4 py-1.5 h-fit to-button/55 shadow-md rounded-lg lg:text-sm"
+        >
+          Cancel
+        </RouterLink>
+        <button
+          type="submit"
+          class="text-white text-xs font-bold bg-gradient-to-b from-button px-4 py-1.5 h-fit to-button/55 shadow-md rounded-lg lg:text-sm"
+        >
+          Submit
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <div
+    v-if="showError && errorMessages.length > 0"
+    class="fixed inset-0 flex justify-center items-center bg-black bg-opacity-50 z-50"
+  >
+    <div class="bg-white p-6 rounded-lg w-80">
+      <h3 class="text-lg font-bold mb-4">
+        <ul>
+          <li v-for="(message, index) in errorMessages" :key="index">
+            {{ message }}
+          </li>
+        </ul>
+      </h3>
+      <div class="flex justify-between gap-4">
+        <button @click="closeErrorPopup" class="w-full bg-red-600 text-white py-2 rounded-md">
+          Ok
+        </button>
+      </div>
+    </div>
+  </div>
+</template>

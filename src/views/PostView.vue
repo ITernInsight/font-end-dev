@@ -3,15 +3,20 @@ import { computed, ref, onMounted } from 'vue'
 import axios from 'axios'
 import Filter from '../components/FilterComp.vue'
 
+interface Company {
+  id: number;
+  companyName: string;
+}
+
 // Define the Post interface
 interface Post {
-  Post_ID: number
-  Admin_ID: number
-  Company_ID: number
-  companyName: string
-  Position: string
-  Description: string
-  Deadline: string
+  id: number
+  title: string
+  description: string
+  position: string
+  startDate: Date | null
+  endDate: Date
+  company: Company
 }
 
 // Declare posts array and loading state
@@ -19,24 +24,36 @@ const posts = ref<Post[]>([])
 const isLoading = ref(true) // loading state
 const searchKeyword = ref('') // search keyword
 const selectedPosition = ref('') // position filter
-const startDate = ref('') // start date filter
-const endDate = ref('') // end date filter
+const startDateSelected = ref('') // start date filter
+const endDateSelected = ref('') // end date filter
 
 const fetchData = async () => {
   try {
-    const response = await axios.get('http://localhost:3000/posts')
-    posts.value = response.data
+    const response = await axios.get<Post[]>('http://localhost:3000/posts')
+    // Flatten the data by extracting the companyName
+    posts.value = response.data.map((post) => ({
+      id: post.id,
+      title: post.title,
+      description: post.description,
+      position: post.position,
+      startDate: post.startDate ? new Date(post.startDate) : null,
+      endDate: new Date(post.endDate),
+      company: {
+        id: post.company.id,
+        companyName: post.company.companyName,
+      }
+    }))
   } catch (error) {
     console.error('Error fetching data', error)
   } finally {
-    isLoading.value = false // data fetch completed
+    isLoading.value = false
   }
 }
 
 onMounted(fetchData)
 
 const positions = computed(() => {
-  const uniquePositions = new Set(posts.value.map((post) => post.Position))
+  const uniquePositions = new Set(posts.value.map((post) => post.position))
   return Array.from(uniquePositions)
 })
 
@@ -44,14 +61,19 @@ const positions = computed(() => {
 const filteredReviews = computed(() => {
   return posts.value.filter((post) => {
     const matchesSearch =
-      post.companyName.toLowerCase().includes(searchKeyword.value.toLowerCase()) ||
-      post.Description.toLowerCase().includes(searchKeyword.value.toLowerCase())
-    const matchesPosition = !selectedPosition.value || post.Position === selectedPosition.value // only match if position is selected
+      post.company.companyName.toLowerCase().includes(searchKeyword.value.toLowerCase()) ||
+      post.description.toLowerCase().includes(searchKeyword.value.toLowerCase())
 
-    const reviewDate = new Date(post.Deadline)
+    const matchesPosition = !selectedPosition.value || post.position === selectedPosition.value
+
+    const postStartDate = post.startDate ? new Date(post.startDate) : null
+    const postEndDate = new Date(post.endDate)
+
     const matchesDateRange =
-      (!startDate.value || reviewDate >= new Date(startDate.value)) &&
-      (!endDate.value || reviewDate <= new Date(endDate.value))
+      (!startDateSelected.value ||
+        !postStartDate ||
+        postStartDate >= new Date(startDateSelected.value)) &&
+      (!endDateSelected.value || postEndDate <= new Date(endDateSelected.value))
 
     return matchesSearch && matchesPosition && matchesDateRange
   })
@@ -63,8 +85,8 @@ const filteredReviews = computed(() => {
     class="my-2"
     @updateSearch="searchKeyword = $event"
     @updatePosition="selectedPosition = $event"
-    @updateStartDate="startDate = $event"
-    @updateEndDate="endDate = $event"
+    @updateStartDate="startDateSelected = $event"
+    @updateEndDate="endDateSelected = $event"
     :positions="positions"
   />
   <div
@@ -73,7 +95,7 @@ const filteredReviews = computed(() => {
     <!-- Check if posts array has data before rendering the first and second post -->
     <div v-if="filteredReviews.length > 0">
       <RouterLink
-        :to="`posts/${filteredReviews[0].Post_ID}`"
+        :to="`posts/${filteredReviews[0].id}`"
         class="flex flex-row border border-border gap-x-4 pr-4 items-start h-full"
       >
         <img
@@ -83,10 +105,10 @@ const filteredReviews = computed(() => {
         />
         <div class="flex flex-col gap-y-1 w-full py-2 xl:gap-y-2">
           <div class="text-hightlight font-bold text-sm w-full md:text-lg lg:text-xl">
-            {{ filteredReviews[0].companyName }}
+            {{ filteredReviews[0].title }}
           </div>
           <span class="text-subtext text-xs md:text-base lg:text-lg">
-            {{ filteredReviews[0].Description }}
+            {{ filteredReviews[0].description }}
           </span>
           <button
             class="hidden mt-2 text-xs font-medium text-white w-fit bg-gradient-to-b from-button to-button/40 px-4 py-1 rounded-lg border-border border shadow-sm md:block md:text-sm lg:text-base"
@@ -99,15 +121,15 @@ const filteredReviews = computed(() => {
 
     <div v-if="filteredReviews.length > 1">
       <RouterLink
-        :to="`posts/${filteredReviews[1].Post_ID}`"
+        :to="`posts/${filteredReviews[1].id}`"
         class="flex flex-row border border-border gap-x-4 pl-4 items-start"
       >
         <div class="flex flex-col gap-y-1 w-full py-2 xl:gap-y-2">
           <div class="text-hightlight font-bold text-sm md:text-lg lg:text-xl">
-            {{ filteredReviews[1].companyName }}
+            {{ filteredReviews[1].title}}
           </div>
           <span class="text-subtext text-xs md:text-base lg:text-lg">
-            {{ filteredReviews[1].Description }}
+            {{ filteredReviews[1].description }}
           </span>
           <button
             class="hidden mt-2 text-xs font-medium text-white w-fit bg-gradient-to-b from-button to-button/40 px-4 py-1 rounded-lg border-border border shadow-sm md:block md:text-sm lg:text-base"
@@ -139,9 +161,9 @@ const filteredReviews = computed(() => {
         :key="index"
         class="flex flex-row justify-between items-center font-Prompt border-border border-b py-2"
       >
-        <span class="text-sm md:text-base lg:text-lg"> {{ post.companyName }} </span>
+        <span class="text-sm md:text-base lg:text-lg"> {{ post.title }} </span>
         <RouterLink
-          :to="`posts/${post.Post_ID}`"
+          :to="`posts/${post.id}`"
           class="text-xs font-medium text-white bg-gradient-to-b from-button to-button/20 px-4 py-1 rounded-lg border-border border shadow-sm md:text-sm lg:text-base"
         >
           Read more

@@ -3,15 +3,22 @@ import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import axios from 'axios'
 
+interface Company {
+  id: number;
+  companyName: string;
+  description: string;
+  phone: string;
+}
+
 // Define the Post interface
 interface Post {
-  Post_ID: number
-  Admin_ID: number
-  Company_ID: number
-  companyName: string
-  Position: string
-  Description: string
-  Deadline: string
+  id: number
+  title: string
+  description: string
+  position: string
+  startDate: Date | null
+  endDate: Date
+  company : Company
 }
 
 // Declare post object and loading state
@@ -22,16 +29,46 @@ const postId = route.params.id
 
 const fetchData = async () => {
   try {
-    const response = await axios.get(`http://localhost:3000/posts/${postId}`)
-    post.value = response.data
+    const response = await axios.get(`http://localhost:3000/posts/${postId}`);
+    // Extract relevant data directly from the single object response
+    const postData = response.data;
+    post.value = {
+      id: postData.id,
+      title: postData.title,
+      description: postData.description,
+      position: postData.position,
+      startDate: postData.startDate ? new Date (postData.startDate) : null,
+      endDate: new Date (postData.endDate),
+      company: {
+        id: postData.company.id,
+        companyName: postData.company.companyName,
+        description: postData.company.description,
+        phone: postData.company.phone
+      }
+    };
   } catch (error) {
-    console.error('Error fetching data', error)
+    console.error('Error fetching data:', error);
   } finally {
-    isLoading.value = false // data fetch completed
+    isLoading.value = false;
   }
-}
+};
 
 onMounted(fetchData)
+
+const formatDate = (date: Date | null): string => {
+  if (date === null) {
+    return ""; // Fallback value for null dates
+  }
+  
+  const options: Intl.DateTimeFormatOptions = {
+    year: 'numeric',
+    month: 'short',
+    day: '2-digit',
+    timeZone: 'Asia/Bangkok', // Thailand Time Zone
+  }
+
+  return new Intl.DateTimeFormat('en-GB', options).format(date).toUpperCase()
+}
 </script>
 
 <template>
@@ -42,11 +79,16 @@ onMounted(fetchData)
     <div v-else-if="post" class="flex flex-col border border-border rounded-lg p-6 gap-2">
       <div class="flex flex-row gap-x-4 items-center">
         <div class="w-[40px] h-[40px] bg-gray-600 rounded-full"></div>
-        <h1 class="text-lg font-bold font-Prompt">{{ post.companyName }}</h1>
+        <h1 class="text-lg font-bold font-Prompt">{{ post.title }}</h1>
       </div>
-      <span class="text-base font-bold font-Prompt">{{ post.Position }}</span>
-      <span class="text-sm font-Prompt">{{ post.Deadline }}</span>
-      <span class="text-xs font-Prompt">{{ post.Description }}</span>
+      <span class="text-base font-bold font-Prompt">{{ post.position }}</span>
+      <div class="flex flex-row gap-2">
+        <span class="text-sm font-Prompt">{{ formatDate(post.startDate) }}</span>
+        <span v-if="post.startDate != null" class="text-sm font-Prompt"> - </span>
+        <span v-if="post.startDate == null" class="text-sm font-Prompt"> DeadLine: </span>
+        <span class="text-sm font-Prompt">{{ formatDate(post.endDate) }}</span>
+      </div>
+      <span class="text-xs font-Prompt">{{ post.description }}</span>
     </div>
     <div v-else class="text-center">Post not found</div>
   </div>
