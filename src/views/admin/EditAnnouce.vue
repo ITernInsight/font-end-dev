@@ -12,6 +12,7 @@ interface Company {
 interface Post {
   id: number
   title: string
+  subtitle:string
   description: string
   position: string[]
   startDate: Date | null
@@ -24,6 +25,7 @@ interface Post {
 const post = ref<Post | null>(null)
 const companies = ref<Company[]>([])
 const title = ref('')
+const subtitle = ref('')
 const companyName = ref('')
 const position = ref(<string[]>[])
 const description = ref('')
@@ -45,6 +47,7 @@ const EditAnnoucement = async () => {
   try {
     const response = await axios.put(`http://localhost:3000/posts/${postId}`, {
       title: title.value,
+      subtitle: subtitle.value,
       description: description.value,
       position: position.value,
       email: email.value,
@@ -97,6 +100,7 @@ const fetchPostDetail = async () => {
     post.value = {
       id: postData.id,
       title: postData.title,
+      subtitle: postData.subtitle,
       description: postData.description,
       position: postData.position,
       startDate: postData.startDate ? new Date(postData.startDate) : null,
@@ -111,6 +115,7 @@ const fetchPostDetail = async () => {
 
     title.value = post.value.title
     description.value = post.value.description
+    subtitle.value = post.value.subtitle
     position.value = post.value.position
     startDate.value = formatstartDate(post.value.startDate)
     endDate.value = formatendDate(post.value.endDate)
@@ -266,6 +271,16 @@ const toggleDropdown = () => {
             <span>{{ pos }}</span>
           </div>
         </div>
+      </div>
+
+      <div class="mb-4">
+        <label>Subtitle <span class="text-xs text-red-500">(Subtitle should not exceed 255 characters. )</span></label>
+        <textarea
+          v-model="subtitle"
+          class="w-full border rounded-lg px-3 py-2"
+          maxlength="255"
+          rows="2"
+        ></textarea>
       </div>
 
       <div class="mb-4">

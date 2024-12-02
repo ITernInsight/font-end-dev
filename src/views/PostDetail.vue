@@ -81,7 +81,16 @@ const formatDate = (date: Date | null): string => {
         <div class="w-[40px] h-[40px] bg-gray-600 rounded-full"></div>
         <h1 class="text-lg font-bold font-Prompt">{{ post.title }}</h1>
       </div>
-      <span class="text-base font-bold font-Prompt">{{ post.position }}</span>
+      <div class="flex flex-row items-center w-fit gap-4 text-base font-bold font-Prompt">
+        Position Availiable:
+        <div class="border border-border w-fit p-2 rounded-lg">
+          <div v-for="(position, index) in post.position" :key="index">
+            <span>
+              {{ position }}
+            </span>
+          </div>
+        </div>
+      </div>
       <div class="flex flex-row gap-2">
         <span class="text-sm font-Prompt">{{ formatDate(post.startDate) }}</span>
         <span v-if="post.startDate != null" class="text-sm font-Prompt"> - </span>

@@ -15,6 +15,7 @@ const adminId = 1 // Replace with actual admin ID
 const companies = ref<Company[]>([])
 const isLoading = ref(true) // loading state
 const title = ref('')
+const subtitle = ref('')
 const description = ref('')
 const position = ref(<string[]>[])
 const startDate = ref(Date)
@@ -54,11 +55,12 @@ const addAnnouncement = async () => {
   try {
     const response = await axios.post('http://localhost:3000/posts', {
       title: title.value,
+      subtitle:subtitle.value,
       description: description.value,
       position: position.value,
       email: email.value,
       tel: tel.value,
-      startDate: startDate.value,
+      startDate: startDate.value? startDate.value: null,
       endDate: endDate.value  ,
       adminId,
       companyId: companyId.value,
@@ -206,6 +208,17 @@ const logDates = () => {
           </div>
         </div>
       </div>
+
+      <div class="mb-4">
+        <label>Subtitle <span class="text-xs text-red-500">(Subtitle should not exceed 255 characters. )</span></label>
+        <textarea
+          v-model="subtitle"
+          class="w-full border rounded-lg px-3 py-2"
+          maxlength="255"
+          rows="2"
+        ></textarea>
+      </div>
+
 
       <div class="mb-4">
         <label>Description <span class="text-red-500">*</span></label>

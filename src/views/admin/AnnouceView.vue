@@ -90,9 +90,7 @@ const cancelDelete = () => {
 // Filtered reviews based on search keyword, selected position, and date range
 const filteredReviews = computed(() => {
   return posts.value.filter((post) => {
-    const matchesSearch =
-      post.company.companyName.toLowerCase().includes(searchKeyword.value.toLowerCase()) ||
-      post.description.toLowerCase().includes(searchKeyword.value.toLowerCase())
+    const matchesSearch = post.title.toLowerCase().includes(searchKeyword.value.toLowerCase())
 
     const matchesPosition = !selectedPosition.value || post.position === selectedPosition.value
 
@@ -108,6 +106,7 @@ const filteredReviews = computed(() => {
     return matchesSearch && matchesPosition && matchesDateRange
   })
 })
+
 </script>
 
 <template>
@@ -123,6 +122,12 @@ const filteredReviews = computed(() => {
     class="font-Prompt px-2 mt-2 space-y-2 w-full sm:px-12 md:px-16 lg:px-32 lg:py-4 xl:px-56 2xl:px-96"
   >
     <div v-if="isLoading" class="text-center">Loading...</div>
+    <div
+      v-if="filteredReviews.length === 0 && !isLoading"
+      class="text-center text-lg text-gray-500"
+    >
+      Post not found
+    </div>
     <!-- Check if posts array has data before rendering the first and second post -->
     <div v-if="filteredReviews.length > 0">
       <div
@@ -130,8 +135,10 @@ const filteredReviews = computed(() => {
         :key="index"
         class="flex flex-row justify-between items-center font-Prompt border-border border-b py-2"
       >
-        <span class="text-sm md:text-base lg:text-lg"> {{ post.title }} </span>
         <div class="flex flex-row gap-2">
+          <span class="text-sm md:text-base lg:text-lg"> {{ post.title }} </span>
+        </div>
+        <div class="flex flex-row gap-2 items-center">
           <RouterLink
             :to="`/admin/annouce/${post.id}`"
             class="text-xs font-medium text-white bg-gradient-to-b from-button to-button/20 px-4 py-1 rounded-lg border-border border shadow-sm md:text-sm lg:text-base"
@@ -154,7 +161,6 @@ const filteredReviews = computed(() => {
         </div>
       </div>
     </div>
-    <div v-else class="text-center">Post not found.</div>
   </div>
 
   <div

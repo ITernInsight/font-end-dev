@@ -4,14 +4,15 @@ import axios from 'axios'
 import Filter from '../components/FilterComp.vue'
 
 interface Company {
-  id: number;
-  companyName: string;
+  id: number
+  companyName: string
 }
 
 // Define the Post interface
 interface Post {
   id: number
   title: string
+  subtitle: string
   description: string
   position: string
   startDate: Date | null
@@ -34,6 +35,7 @@ const fetchData = async () => {
     posts.value = response.data.map((post) => ({
       id: post.id,
       title: post.title,
+      subtitle: post.subtitle,
       description: post.description,
       position: post.position,
       startDate: post.startDate ? new Date(post.startDate) : null,
@@ -41,7 +43,7 @@ const fetchData = async () => {
       company: {
         id: post.company.id,
         companyName: post.company.companyName,
-      }
+      },
     }))
   } catch (error) {
     console.error('Error fetching data', error)
@@ -52,39 +54,43 @@ const fetchData = async () => {
 
 onMounted(fetchData)
 
-const positions = computed(() => {
-  const uniquePositions = new Set(posts.value.map((post) => post.position))
-  return Array.from(uniquePositions)
-})
-
 // Filtered reviews based on search keyword, selected position, and date range
 const filteredReviews = computed(() => {
   return posts.value.filter((post) => {
     const matchesSearch =
-      post.company.companyName.toLowerCase().includes(searchKeyword.value.toLowerCase()) ||
-      post.description.toLowerCase().includes(searchKeyword.value.toLowerCase())
+      post.title.toLowerCase().includes(searchKeyword.value.toLowerCase()) ||
+      post.subtitle.toLowerCase().includes(searchKeyword.value.toLowerCase());
 
-    const matchesPosition = !selectedPosition.value || post.position === selectedPosition.value
+    const matchesPosition = !selectedPosition.value || post.position.includes(selectedPosition.value);
 
-    const postStartDate = post.startDate ? new Date(post.startDate) : null
-    const postEndDate = new Date(post.endDate)
+    const postStartDate = post.startDate ? new Date(post.startDate) : null;
+    const postEndDate = new Date(post.endDate);
 
     const matchesDateRange =
       (!startDateSelected.value ||
         !postStartDate ||
-        postStartDate >= new Date(startDateSelected.value)) &&
-      (!endDateSelected.value || postEndDate <= new Date(endDateSelected.value))
+        postStartDate <= new Date(startDateSelected.value)) &&
+      (!endDateSelected.value || postEndDate >= new Date(endDateSelected.value));
 
-    return matchesSearch && matchesPosition && matchesDateRange
-  })
-})
+    return matchesSearch && matchesPosition && matchesDateRange;
+  });
+});
+
+
+
+const positions = computed(() => {
+  const allPositions = posts.value.flatMap((post) => post.position);
+  const uniquePositions = new Set(allPositions); // This ensures only unique positions
+  return Array.from(uniquePositions);
+});
+
 </script>
 
 <template>
   <Filter
     class="my-2"
     @updateSearch="searchKeyword = $event"
-    @updatePosition="selectedPosition = $event"
+    @updatePosition="selectedPosition = $event" 
     @updateStartDate="startDateSelected = $event"
     @updateEndDate="endDateSelected = $event"
     :positions="positions"
@@ -92,6 +98,15 @@ const filteredReviews = computed(() => {
   <div
     class="font-Prompt px-2 mt-2 space-y-2 w-full sm:px-12 md:px-16 lg:px-32 lg:py-4 xl:px-56 2xl:px-96"
   >
+    <div v-if="isLoading" class="text-center">Loading...</div>
+    <!-- Show "Post not found" if there are no filtered posts -->
+    <div
+      v-if="filteredReviews.length === 0 && !isLoading"
+      class="text-center text-lg text-gray-500"
+    >
+      Post not found
+    </div>
+
     <!-- Check if posts array has data before rendering the first and second post -->
     <div v-if="filteredReviews.length > 0">
       <RouterLink
@@ -108,7 +123,7 @@ const filteredReviews = computed(() => {
             {{ filteredReviews[0].title }}
           </div>
           <span class="text-subtext text-xs md:text-base lg:text-lg">
-            {{ filteredReviews[0].description }}
+            {{ filteredReviews[0].subtitle }}
           </span>
           <button
             class="hidden mt-2 text-xs font-medium text-white w-fit bg-gradient-to-b from-button to-button/40 px-4 py-1 rounded-lg border-border border shadow-sm md:block md:text-sm lg:text-base"
@@ -126,10 +141,10 @@ const filteredReviews = computed(() => {
       >
         <div class="flex flex-col gap-y-1 w-full py-2 xl:gap-y-2">
           <div class="text-hightlight font-bold text-sm md:text-lg lg:text-xl">
-            {{ filteredReviews[1].title}}
+            {{ filteredReviews[1].title }}
           </div>
           <span class="text-subtext text-xs md:text-base lg:text-lg">
-            {{ filteredReviews[1].description }}
+            {{ filteredReviews[1].subtitle }}
           </span>
           <button
             class="hidden mt-2 text-xs font-medium text-white w-fit bg-gradient-to-b from-button to-button/40 px-4 py-1 rounded-lg border-border border shadow-sm md:block md:text-sm lg:text-base"
