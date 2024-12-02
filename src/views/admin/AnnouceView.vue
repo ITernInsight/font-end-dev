@@ -100,7 +100,7 @@ const filteredReviews = computed(() => {
     const matchesDateRange =
       (!startDateSelected.value ||
         !postStartDate ||
-        postStartDate >= new Date(startDateSelected.value)) &&
+        postStartDate <= new Date(startDateSelected.value)) &&
       (!endDateSelected.value || postEndDate <= new Date(endDateSelected.value))
 
     return matchesSearch && matchesPosition && matchesDateRange
