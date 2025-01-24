@@ -50,6 +50,46 @@ const toggleDropdown = () => {
 }
 const errorMessages = ref<string[]>([])
 const showError = ref(false)
+
+const profanityPattern = /(อี)?(เหี้ย|ดอก|ห่า|สัส|เวร|ควาย|สัด|ควย)/gi
+
+const removeRepeatedCharacters = (text: string) => {
+  return text.replace(/([ก-๙])\1+/g, '$1')
+}
+
+const containsProfanity = (text: string) => {
+  const cleanedText = removeRepeatedCharacters(text)
+  return profanityPattern.test(cleanedText)
+}
+
+const handleInput = (event: Event) => {
+  const input = event.target as HTMLInputElement | HTMLTextAreaElement
+  const cleanedText = removeRepeatedCharacters(input.value)
+  if (containsProfanity(cleanedText)) {
+    input.value = cleanedText.replace(profanityPattern, "")
+    input.setCustomValidity("กรุณาใช้คำที่สุภาพ")
+    input.reportValidity()
+  } else {
+    input.setCustomValidity("")
+    input.reportValidity()
+  }
+}
+
+const validateForm = () => {
+  errorMessages.value = []
+  if (containsProfanity(title.value)) {
+    errorMessages.value.push('Title contains inappropriate language.')
+  }
+  if (containsProfanity(description.value)) {
+    errorMessages.value.push('Description contains inappropriate language.')
+  }
+  if (errorMessages.value.length > 0) {
+    showError.value = true
+    return false
+  }
+  return true
+}
+
 // Function to handle form submission
 const addAnnouncement = async () => {
   try {
@@ -79,6 +119,13 @@ const addAnnouncement = async () => {
     }
   }
 }
+
+const submitForm = () => {
+  if (validateForm()) {
+    addAnnouncement()
+  }
+}
+
 const fetchData = async () => {
   try {
     const response = await axios.get<Company[]>('http://localhost:3000/companies')
@@ -114,7 +161,7 @@ const setSelectedId = (id: number, item: string) => {
   search.value = item
 }
 
-const handleInput = (event: Event) => {
+const handleCompanyInput = (event: Event) => {
   isOpen.value = true
   search.value = (event.target as HTMLInputElement).value
 }
@@ -145,16 +192,16 @@ const logDates = () => {
 <template>
   <div class="max-w-4xl mx-auto p-4 font-Prompt">
     <h1 class="text-center text-2xl font-bold mb-6 text-hightlight">Add Announce</h1>
-    <form @submit.prevent="addAnnouncement">
+    <form @submit.prevent="submitForm">
       <div class="mb-4">
         <label class="block font-semibold mb-1">Title <span class="text-red-500">*</span></label>
-        <input type="text" v-model="title" class="w-full border rounded-lg px-3 py-2" required />
+        <input type="text" v-model="title" @input="handleInput" class="w-full border rounded-lg px-3 py-2" required />
       </div>
       <div class="mb-4">
         <label>Company <span class="text-red-500">*</span></label>
         <input
           type="text"
-          @input="handleInput"
+          @input="handleCompanyInput"
           v-model="search"
           class="w-full border rounded-lg px-3 py-2"
           required
@@ -224,6 +271,7 @@ const logDates = () => {
         <label>Description <span class="text-red-500">*</span></label>
         <textarea
           v-model="description"
+          @input="handleInput"
           class="w-full border rounded-lg px-3 py-2"
           rows="5"
           required

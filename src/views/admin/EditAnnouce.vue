@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import router from '@/router'
-import axios from 'axios'
-import { computed, onMounted, ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { ref, computed, onMounted } from 'vue';
+import axios from 'axios';
+import router from '@/router';
+import { useRoute } from 'vue-router';
 
 interface Company {
   id: number
@@ -12,7 +12,7 @@ interface Company {
 interface Post {
   id: number
   title: string
-  subtitle:string
+  subtitle: string
   description: string
   position: string[]
   startDate: Date | null
@@ -31,7 +31,6 @@ const position = ref(<string[]>[])
 const description = ref('')
 const email = ref('')
 const tel = ref('')
-// const startDate = ref<Date | null>(null);
 const startDate = ref<string | null>(null)
 const endDate = ref<string>('')
 const companyId = ref<number>(0)
@@ -43,7 +42,49 @@ const isLoading = ref(true)
 const route = useRoute()
 const postId = route.params.id
 
+const profanityPattern = /(อี)?(เหี้ย|ดอก|ห่า|สัส|เวร|ควาย|สัด|ควย)/gi
+
+const removeRepeatedCharacters = (text: string) => {
+  return text.replace(/([ก-๙])\1+/g, '$1')
+}
+
+const containsProfanity = (text: string) => {
+  const cleanedText = removeRepeatedCharacters(text)
+  return profanityPattern.test(cleanedText)
+}
+
+const handleInput = (event: Event) => {
+  const input = event.target as HTMLInputElement | HTMLTextAreaElement
+  const cleanedText = removeRepeatedCharacters(input.value)
+  if (containsProfanity(cleanedText)) {
+    input.value = cleanedText.replace(profanityPattern, "")
+    input.setCustomValidity("กรุณาใช้คำที่สุภาพ")
+    input.reportValidity()
+  } else {
+    input.setCustomValidity("")
+    input.reportValidity()
+  }
+}
+
+const validateForm = (): boolean => {
+  errorMessages.value = []
+  if (containsProfanity(title.value)) {
+    errorMessages.value.push('Title contains inappropriate language.')
+  }
+  if (containsProfanity(description.value)) {
+    errorMessages.value.push('Description contains inappropriate language.')
+  }
+  if (errorMessages.value.length > 0) {
+    showError.value = true
+    return false
+  }
+  return true
+}
+
 const EditAnnoucement = async () => {
+  if (!validateForm()) {
+    return
+  }
   try {
     const response = await axios.put(`http://localhost:3000/posts/${postId}`, {
       title: title.value,
@@ -59,7 +100,6 @@ const EditAnnoucement = async () => {
 
     router.push('/admin/annouce')
     console.log('Announcement added successfully:', response.data)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     if (error.response && error.response.data && error.response.data.message) {
       const messages = error.response.data.message
@@ -71,8 +111,6 @@ const EditAnnoucement = async () => {
   }
 }
 
-
-
 const closeErrorPopup = () => {
   showError.value = false
 }
@@ -80,14 +118,14 @@ const closeErrorPopup = () => {
 const formatstartDate = (date: Date | null): string | null => {
   if (!date) return null
   const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0') // Months are zero-based
+  const month = String(date.getMonth() + 1).padStart(2, '0')
   const day = String(date.getDate()).padStart(2, '0')
   return `${year}-${month}-${day}`
 }
 
 const formatendDate = (date: Date): string => {
   const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0') // Months are zero-based
+  const month = String(date.getMonth() + 1).padStart(2, '0')
   const day = String(date.getDate()).padStart(2, '0')
   return `${year}-${month}-${day}`
 }
@@ -95,7 +133,6 @@ const formatendDate = (date: Date): string => {
 const fetchPostDetail = async () => {
   try {
     const response = await axios.get(`http://localhost:3000/posts/${postId}`)
-    // Extract relevant data directly from the single object response
     const postData = response.data
     post.value = {
       id: postData.id,
@@ -135,13 +172,9 @@ const fetchPostDetail = async () => {
 const fetchCompany = async () => {
   try {
     const response = await axios.get<Company[]>('http://localhost:3000/companies')
-    const companyData = response.data
-    companies.value = companyData.map((company) => ({
-      id: company.id,
-      companyName: company.companyName,
-    }))
+    companies.value = response.data
   } catch (error) {
-    console.error('Error fetching data', error)
+    console.error('Error fetching companies:', error)
   }
 }
 
@@ -169,7 +202,7 @@ const setSelectedId = (id: number, item: string) => {
   search.value = item
 }
 
-const handleInput = (event: Event) => {
+const handleCompanyInput = (event: Event) => {
   isOpen.value = true
   search.value = (event.target as HTMLInputElement).value
 }
@@ -212,13 +245,13 @@ const toggleDropdown = () => {
     <form @submit.prevent="EditAnnoucement">
       <div class="mb-4">
         <label class="block font-semibold mb-1">Title <span class="text-red-500">*</span></label>
-        <input type="text" v-model="title" class="w-full border rounded-lg px-3 py-2" />
+        <input type="text" v-model="title" class="w-full border rounded-lg px-3 py-2" @input="handleInput" />
       </div>
       <div class="mb-4">
         <label>Company <span class="text-red-500">*</span></label>
         <input
           type="text"
-          @input="handleInput"
+          @input="handleCompanyInput"
           v-model="search"
           class="w-full border rounded-lg px-3 py-2"
           required
@@ -280,6 +313,7 @@ const toggleDropdown = () => {
           class="w-full border rounded-lg px-3 py-2"
           maxlength="255"
           rows="2"
+          @input="handleInput"
         ></textarea>
       </div>
 
@@ -289,6 +323,7 @@ const toggleDropdown = () => {
           v-model="description"
           class="w-full border rounded-lg px-3 py-2"
           rows="5"
+          @input="handleInput"
         ></textarea>
       </div>
       <div class="mb-4">
