@@ -1,5 +1,4 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
 import PostView from '../views/PostView.vue'
 import ReviewView from '../views/ReviewView.vue'
 import QuestionView from '../views/QuestionView.vue'
@@ -19,40 +18,42 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
-      component: HomeView,
-      redirect: 'posts',
-      children: [
-        {
-          path: 'posts',
-          name: 'posts',
-          component: PostView,
-        },
-        {
-          path: 'posts/:id',
-          name: 'post details',
-          component: PostDetail,
-        },
-        {
-          path: 'reviews',
-          name: 'reviews',
-          component: ReviewView,
-        },
-        {
-          path: 'reviews/:id',
-          name: 'review detail',
-          component: ReviewDetail,
-        },
-        {
-          path: 'questions',
-          name: 'questions',
-          component: QuestionView,
-        },
-        {
-          path: 'questions/:id',
-          name: 'question details',
-          component: QuestionDetail,
-        },
-      ],
+      redirect: '/login',
+    },
+    {
+      path: '/login',
+      name: 'login',
+      component: LoginView,
+    },
+    {
+      path: '/posts',
+      name: 'posts',
+      component: PostView,
+    },
+    {
+      path: '/posts/:id',
+      name: 'post details',
+      component: PostDetail,
+    },
+    {
+      path: '/reviews',
+      name: 'reviews',
+      component: ReviewView,
+    },
+    {
+      path: '/reviews/:id',
+      name: 'review detail',
+      component: ReviewDetail,
+    },
+    {
+      path: '/questions',
+      name: 'questions',
+      component: QuestionView,
+    },
+    {
+      path: '/questions/:id',
+      name: 'question details',
+      component: QuestionDetail,
     },
     {
       path: '/admin',
@@ -82,11 +83,6 @@ const router = createRouter({
       path: '/admin/edit-annouce/:id',
       name: 'edit annouce',
       component: EditAnnouce,
-    },
-    {
-      path: '/',
-      name: 'Login',
-      component: LoginView,
     },
   ],
 })
