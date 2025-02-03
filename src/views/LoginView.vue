@@ -4,7 +4,7 @@
       <img src="@/assets/login-bg.jpg" alt="Login Background" />
     </div>
     <div class="form-section">
-      <h1>Welcome to the ITern Insighttt <br> Community</h1>
+      <h1>Welcome to the ITern Insight <br> Community</h1>
       <form @submit.prevent="handleLogin">
         <div class="input-group">
           <input type="text" v-model="username" placeholder="Email or Username" />
@@ -35,7 +35,6 @@ const rememberMe = ref(false);
 
 const handleLogin = () => {
   console.log(`Logging in with ${username.value}, Remember Me: ${rememberMe.value}`);
-
   router.push({ name: 'posts' });
 };
 </script>
