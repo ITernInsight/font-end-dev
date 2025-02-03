@@ -1,7 +1,13 @@
 <script setup lang="ts">
-import { RouterView, useRoute } from 'vue-router'
+import { RouterView, useRoute, useRouter } from 'vue-router';
 
-const route = useRoute()
+
+const route = useRoute();
+const router = useRouter();
+
+const goToLogin = () => {
+  router.push({ name: 'Login' });
+};
 </script>
 
 <template>
@@ -14,10 +20,12 @@ const route = useRoute()
     </div>
     <button
       v-if="!route.path.includes('/admin')"
+      @click="goToLogin"
       class="text-white text-xs font-bold bg-gradient-to-b from-button px-4 py-1.5 h-fit to-button/50 shadow-md rounded-lg lg:text-sm"
-    >
-      Log In
-    </button>
+>
+  Log In
+</button>
+
   </header>
 
   <RouterView />

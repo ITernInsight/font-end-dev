@@ -11,6 +11,7 @@ import AddAnnouce from '@/views/admin/AddAnnouce.vue'
 import EditAnnouce from '@/views/admin/EditAnnouce.vue'
 import AnnouceView from '@/views/admin/AnnouceView.vue'
 import DetailAnnouce from '@/views/admin/DetailAnnouce.vue'
+import LoginView from '@/views/LoginView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -81,6 +82,11 @@ const router = createRouter({
       path: '/admin/edit-annouce/:id',
       name: 'edit annouce',
       component: EditAnnouce,
+    },
+    {
+      path: '/',
+      name: 'Login',
+      component: LoginView,
     },
   ],
 })
