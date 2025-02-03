@@ -34,7 +34,7 @@ const updateEndDate = () => {
 </script>
 
 <template>
-  <div
+  <div v-bind="$attrs"
     class="flex flex-row space-x-2 px-2 justify-center items-center font-Prompt mt-4 w-full sm:px-12 md:px-16 lg:px-32 lg:py-4 xl:px-56 2xl:px-96"
   >
     <input
