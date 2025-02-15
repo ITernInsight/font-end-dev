@@ -11,6 +11,14 @@ import EditAnnouce from '@/views/admin/EditAnnouce.vue'
 import AnnouceView from '@/views/admin/AnnouceView.vue'
 import DetailAnnouce from '@/views/admin/DetailAnnouce.vue'
 import LoginView from '@/views/LoginView.vue'
+import AdminQuestion from '@/views/admin/AdminQuestion.vue'
+import AdminReview from '@/views/admin/AdminReview.vue'
+import AddReview from '@/views/admin/AddReview.vue'
+import AddQuestion from '@/views/admin/AddQuestion.vue'
+import DetailReview from '@/views/admin/DetailReview.vue'
+import EditQuestion from '@/views/admin/EditQuestion.vue'
+import EditReview from '@/views/admin/EditReview.vue'
+import DetailQuestion from '@/views/admin/DetailQuestion.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -72,6 +80,17 @@ const router = createRouter({
           name: 'annouce details',
           component: DetailAnnouce,
         },
+        {
+          path: 'review/:id',
+          name: 'review details',
+          component: DetailReview, 
+        },
+        {
+          path: 'question/:id',
+          name: 'question details',
+          component: DetailQuestion, 
+        },
+
       ],
     },
     {
@@ -84,6 +103,41 @@ const router = createRouter({
       name: 'edit annouce',
       component: EditAnnouce,
     },
+    {
+      path: '/admin/review',
+      name: 'admin review',
+      component: AdminReview,
+      meta: { requiresAuth: true, role: 'admin' },
+    },
+    {
+      path: '/admin/add-review',
+      name: 'add review',
+      component: AddReview,
+    },
+    {
+      path: '/admin/edit-review/:id',
+      name: 'edit review',
+      component: EditReview,
+    },
+    
+    {
+      path: '/admin/question',
+      name: 'admin question',
+      component: AdminQuestion,
+      meta: { requiresAuth: true, role: 'admin' },
+    },
+    {
+      path: '/admin/add-question',
+      name: 'add question',
+      component: AddQuestion,
+    },
+    {
+      path: '/admin/edit-question/:id',
+      name: 'edit question',
+      component: EditQuestion,
+    },
+    
+    
   ],
 })
 
