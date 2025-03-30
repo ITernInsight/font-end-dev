@@ -1,66 +1,38 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, watch } from 'vue';
-import { RouterView, useRoute, useRouter } from 'vue-router';
-import ProfileDropdown from '@/components/ProfileDropdown.vue';
+import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
+import { RouterView, useRoute, useRouter } from 'vue-router'
+import ProfileDropdown from '@/components/ProfileDropdown.vue'
 
+const route = useRoute()
+const router = useRouter()
 
-const route = useRoute();
-const router = useRouter();
+const isLoggedIn = ref(false)
 
-const isLoggedIn = ref(false);
-const userRole = ref<string | null>(null);
-
-// ตรวจสอบสถานะการล็อกอิน
 const checkLoginStatus = () => {
-  const token = localStorage.getItem('token');
-  if (!token) {
-    isLoggedIn.value = false;
-    userRole.value = null;
-    return;
-  }
-
+  const user = localStorage.getItem('user')
   try {
-    const payload = JSON.parse(atob(token.split('.')[1])); // Decode JWT Payload
-    const currentTime = Math.floor(Date.now() / 1000); // เวลาปัจจุบันในรูปแบบ Unix Timestamp
-
-    if (payload.exp > currentTime) {
-      isLoggedIn.value = true;
-      userRole.value = payload.role || null;
-    } else {
-      // Token หมดอายุ
-      logout();
-    }
+    isLoggedIn.value = !!JSON.parse(user) // ตรวจสอบว่า user มีค่าและเป็น JSON ที่ถูกต้อง
   } catch {
-    logout();
+    isLoggedIn.value = false // หาก JSON.parse ล้มเหลว ให้ตั้งค่าเป็น false
   }
-};
-
-// ฟังก์ชัน Logout
-const logout = () => {
-  localStorage.removeItem('token');
-  localStorage.removeItem('user');
-  isLoggedIn.value = false;
-  userRole.value = null;
-  router.push('/login'); 
-};
+}
 
 onMounted(() => {
-  checkLoginStatus();
-  window.addEventListener('user-logged-in', checkLoginStatus);
-  window.addEventListener('user-logged-out', logout);
-});
+  checkLoginStatus() // ตรวจสอบสถานะการล็อกอินเมื่อโหลดหน้า
+  window.addEventListener('user-logged-in', checkLoginStatus)
+})
 
 onBeforeUnmount(() => {
-  window.removeEventListener('user-logged-in', checkLoginStatus);
-  window.removeEventListener('user-logged-out', logout);
-});
+  window.removeEventListener('user-logged-in', checkLoginStatus)
+})
 
+// ตรวจสอบการเปลี่ยนเส้นทาง
 watch(
   () => route.path,
   () => {
-    checkLoginStatus();
+    checkLoginStatus()
   }
-);
+)
 </script>
 
 <template>
@@ -74,19 +46,17 @@ watch(
       </span>
     </div>
 
-    <div class="flex items-center gap-2">
-      <!-- แสดงปุ่ม Profile Dropdown หากล็อกอิน -->
-      <ProfileDropdown v-if="isLoggedIn" />
+    <!-- ✅ แสดง ProfileDropdown ถ้า login แล้ว -->
+    <ProfileDropdown v-if="isLoggedIn" />
 
-      <!-- แสดงปุ่ม Login หากไม่ได้ล็อกอิน -->
-      <button
-        v-if="!isLoggedIn && route.name !== 'login'"
-        @click="router.push('/login')"
-        class="text-white text-xs font-bold bg-gradient-to-b from-button px-4 py-1.5 h-fit to-button/50 shadow-md rounded-lg lg:text-sm"
-      >
-        Log In
-      </button>
-    </div>
+    <!-- ✅ แสดงปุ่ม Log In ถ้ายังไม่ได้ login -->
+    <button
+        v-if="isLoggedIn === false && route.name !== 'login'"
+  @click="router.push('/login')"
+      class="text-white text-xs font-bold bg-gradient-to-b from-button px-4 py-1.5 h-fit to-button/50 shadow-md rounded-lg lg:text-sm"
+    >
+      Log In
+    </button>
   </header>
 
   <RouterView />

@@ -13,6 +13,20 @@ const isDropdownOpen = ref(false);
       alt=""
       class="relative bg-gray-200 w-full h-fit max-h-[520px]"
     />
+
+    <div class="absolute left-16 top-24 text-white z-10 flex flex-row items-start">
+  <!-- ตัว I เส้นขาวบางๆ -->
+  <div class="w-[12px] h-[170px] bg-white mr-4 rounded-sm"></div>
+
+  <!-- TERN + NSIGHT -->
+  <div class="flex flex-col leading-tight text-6xl font-bold uppercase space-y-4">
+    <p>TERN</p>
+    <p>NSIGHT</p>
+  </div>
+</div>
+
+
+    
     <div class="flex flex-row justify-center items-center">
       <RouterLink
         to="/posts"
