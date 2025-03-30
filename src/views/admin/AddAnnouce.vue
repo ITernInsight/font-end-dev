@@ -93,32 +93,38 @@ const validateForm = () => {
 // Function to handle form submission
 const addAnnouncement = async () => {
   try {
-    const response = await axios.post('http://localhost:3000/posts', {
-      title: title.value,
-      subtitle:subtitle.value,
-      description: description.value,
-      position: position.value,
-      email: email.value,
-      tel: tel.value,
-      startDate: startDate.value? startDate.value: null,
-      endDate: endDate.value  ,
-      adminId,
-      companyId: companyId.value,
-    })
-
-    router.push('/admin/annouce')
-    console.log('Announcement added successfully:', response.data)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (error: any) {
-    if (error.response && error.response.data && error.response.data.message) {
-      const messages = error.response.data.message
-      console.log('Validation errors:', messages)
-      errorMessages.value = messages
-    } else {
-      console.error('Error adding announcement:', error)
+    const token = localStorage.getItem('token'); // ดึง JWT Token จาก Local Storage
+    if (!token) {
+      throw new Error('Unauthorized: No token found');
     }
+
+    const response = await axios.post(
+      'http://localhost:3000/posts',
+      {
+        title: title.value,
+        subtitle: subtitle.value,
+        description: description.value,
+        position: position.value,
+        email: email.value,
+        tel: tel.value,
+        startDate: startDate.value,
+        endDate: endDate.value,
+        adminId,
+        companyId: companyId.value,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`, // เพิ่ม JWT Token ใน Header
+        },
+      }
+    );
+
+    router.push('/admin/annouce');
+    console.log('Announcement added successfully:', response.data);
+  } catch (error) {
+    console.error('Error adding announcement:', error.response?.data || error.message);
   }
-}
+};
 
 const submitForm = () => {
   if (validateForm()) {

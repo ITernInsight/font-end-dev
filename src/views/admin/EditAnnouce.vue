@@ -86,20 +86,33 @@ const EditAnnoucement = async () => {
     return
   }
   try {
-    const response = await axios.put(`http://localhost:3000/posts/${postId}`, {
-      title: title.value,
-      subtitle: subtitle.value,
-      description: description.value,
-      position: position.value,
-      email: email.value,
-      tel: tel.value,
-      startDate: startDate.value ? new Date(startDate.value) : null,
-      endDate: new Date(endDate.value),
-      companyId: companyId.value,
-    })
+    const token = localStorage.getItem('token'); // ดึง JWT Token จาก Local Storage
+    if (!token) {
+      throw new Error('Unauthorized: No token found'); // หากไม่มี Token ให้แจ้งข้อผิดพลาด
+    }
 
-    router.push('/admin/annouce')
-    console.log('Announcement added successfully:', response.data)
+    const response = await axios.put(
+      `http://localhost:3000/posts/${postId}`,
+      {
+        title: title.value,
+        description: description.value,
+        position: position.value,
+        startDate: startDate.value,
+        endDate: endDate.value,
+        email: email.value,
+        tel: tel.value,
+        subtitle: subtitle.value,
+        companyId: companyId.value,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`, // เพิ่ม JWT Token ใน Header
+        },
+      }
+    );
+
+    console.log('Announcement updated successfully:', response.data);
+    router.push('/admin/annouce'); // เปลี่ยนเส้นทางหลังจากแก้ไขสำเร็จ
   } catch (error: any) {
     if (error.response && error.response.data && error.response.data.message) {
       const messages = error.response.data.message
@@ -132,8 +145,18 @@ const formatendDate = (date: Date): string => {
 
 const fetchPostDetail = async () => {
   try {
-    const response = await axios.get(`http://localhost:3000/posts/${postId}`)
-    const postData = response.data
+    const token = localStorage.getItem('token'); // ดึง JWT Token จาก Local Storage
+    if (!token) {
+      throw new Error('Unauthorized: No token found');
+    }
+
+    const response = await axios.get(`http://localhost:3000/posts/${postId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`, // เพิ่ม JWT Token ใน Header
+      },
+    });
+
+    const postData = response.data;
     post.value = {
       id: postData.id,
       title: postData.title,
@@ -148,26 +171,26 @@ const fetchPostDetail = async () => {
         id: postData.company.id,
         companyName: postData.company.companyName,
       },
-    }
+    };
 
-    title.value = post.value.title
-    description.value = post.value.description
-    subtitle.value = post.value.subtitle
-    position.value = post.value.position
-    startDate.value = formatstartDate(post.value.startDate)
-    endDate.value = formatendDate(post.value.endDate)
-    email.value = post.value.email
-    tel.value = post.value.tel
-    companyId.value = post.value.company.id
-    companyName.value = post.value.company.companyName
-    search.value = post.value.company.companyName
-
+    // ตั้งค่าข้อมูลในฟอร์ม
+    title.value = post.value.title;
+    description.value = post.value.description;
+    subtitle.value = post.value.subtitle;
+    position.value = post.value.position;
+    startDate.value = formatstartDate(post.value.startDate);
+    endDate.value = formatendDate(post.value.endDate);
+    email.value = post.value.email;
+    tel.value = post.value.tel;
+    companyId.value = post.value.company.id;
+    companyName.value = post.value.company.companyName;
+    search.value = post.value.company.companyName;
   } catch (error) {
-    console.error('Error fetching data:', error)
+    console.error('Error fetching data:', error.response?.data || error.message);
   } finally {
-    isLoading.value = false
+    isLoading.value = false;
   }
-}
+};
 
 const fetchCompany = async () => {
   try {

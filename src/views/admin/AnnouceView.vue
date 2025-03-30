@@ -33,36 +33,46 @@ const postIdToDelete = ref<number | null>(null)
 
 const fetchData = async () => {
   try {
-    const response = await axios.get<Post[]>('http://localhost:3000/posts')
-    // Flatten the data by extracting the companyName
-    posts.value = response.data.map((post) => ({
-      id: post.id,
-      title: post.title,
-      description: post.description,
-      position: post.position,
-      startDate: post.startDate ? new Date(post.startDate) : null,
-      endDate: new Date(post.endDate),
-      company: {
-        id: post.company.id,
-        companyName: post.company.companyName,
-      },
-    }))
-  } catch (error) {
-    console.error('Error fetching data', error)
-  } finally {
-    isLoading.value = false
-  }
-}
+    const token = localStorage.getItem('token'); // ดึง JWT Token จาก Local Storage
+    if (!token) {
+      throw new Error('Unauthorized: No token found');
+    }
 
-onMounted(fetchData)
+    const response = await axios.get('http://localhost:3000/posts', {
+      headers: {
+        Authorization: `Bearer ${token}`, // เพิ่ม JWT Token ใน Header
+      },
+    });
+
+    posts.value = response.data;
+  } catch (error) {
+    console.error('Error fetching posts:', error.response?.data || error.message);
+  } finally {
+    isLoading.value = false; // ตั้งค่า isLoading เป็น false ไม่ว่าจะสำเร็จหรือเกิดข้อผิดพลาด
+  }
+};
 
 const deleteAnnouncement = async (id: number) => {
   try {
-    await axios.delete(`http://localhost:3000/posts/${id}`)
+    const token = localStorage.getItem('token'); // ดึง JWT Token จาก Local Storage
+    if (!token) {
+      throw new Error('Unauthorized: No token found');
+    }
+
+    await axios.delete(`http://localhost:3000/posts/${id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`, // เพิ่ม JWT Token ใน Header
+      },
+    });
+
+    console.log('Announcement deleted successfully');
+    fetchData(); // Refresh the list after deletion
   } catch (error) {
-    console.error('Error deleting announcement:', error)
+    console.error('Error deleting announcement:', error.response?.data || error.message);
   }
-}
+};
+
+onMounted(fetchData)
 
 const positions = computed(() => {
   const uniquePositions = new Set(posts.value.map((post) => post.position))

@@ -1,20 +1,41 @@
 <script setup lang="ts">
-import { RouterLink, RouterView, useRoute } from 'vue-router'
-import { ref } from 'vue'
+import { RouterLink, RouterView, useRoute, useRouter} from 'vue-router'
+import { ref, onMounted, computed } from 'vue'
 
 const route = useRoute()
+const router = useRouter()
 
 // State to manage dropdown visibility
 const isDropdownOpen = ref(false)
+const isLoggedIn = ref(!!localStorage.getItem('user'))
+
+const showAddAnnounceButton = computed(() => {
+  return route.path === '/admin/annouce' || route.path.startsWith('/admin/detail-annouce');
+});
+
+onMounted(() => {
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  if (user.role !== 'admin') {
+    router.push('/403'); 
+  }
+});
 </script>
 
 <template>
   <div class="flex flex-col items-center">
+    <button
+      v-if="!isLoggedIn"
+      @click="router.push('/login')"
+      class="mt-4 bg-blue-500 text-white px-4 py-2 rounded"
+    >
+      Login
+    </button>
     <img
       src="../../assets/bg-home.jpg"
       alt=""
       class="relative bg-gray-200 w-full h-fit max-h-[520px]"
     />
+    
     <div class="flex flex-row justify-between items-center w-full px-10">
       <!-- Left Section -->
       <div class="flex flex-row justify-center flex-1">
@@ -66,6 +87,7 @@ const isDropdownOpen = ref(false)
       <!-- Right Section: Add Announcement Button -->
       <RouterLink
         to="/admin/add-annouce"
+        v-if="showAddAnnounceButton"
         class="text-white text-xs font-bold bg-gradient-to-b from-button px-4 py-1.5 h-fit to-button/50 shadow-md rounded-lg lg:text-sm"
       >
         Add Announcement
@@ -73,6 +95,8 @@ const isDropdownOpen = ref(false)
     </div>
 
     <RouterView />
+
+    
   </div>
 </template>
 

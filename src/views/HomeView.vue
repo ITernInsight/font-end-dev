@@ -1,11 +1,9 @@
 <script setup lang="ts">
-import { RouterLink, RouterView, useRoute } from 'vue-router'
-import { ref } from 'vue'
+import { RouterLink, RouterView, useRoute } from 'vue-router';
+import { ref } from 'vue';
 
-const route = useRoute()
-
-// State to manage dropdown visibility
-const isDropdownOpen = ref(false)
+const route = useRoute();
+const isDropdownOpen = ref(false);
 </script>
 
 <template>
@@ -39,7 +37,10 @@ const isDropdownOpen = ref(false)
         </button>
 
         <!-- Dropdown Menu -->
-        <div v-if="isDropdownOpen" class="absolute left-0 mt-2 py-2 bg-white border rounded shadow-lg text-light-text dark:bg-dark-background z-10">
+        <div
+          v-if="isDropdownOpen"
+          class="absolute left-0 mt-2 py-2 bg-white border rounded shadow-lg text-light-text dark:bg-dark-background z-10"
+        >
           <RouterLink
             to="/reviews"
             class="block px-4 py-2 text-light-text hover:text-hightlight dark:hover:bg-dark-secondary/5"
@@ -50,7 +51,7 @@ const isDropdownOpen = ref(false)
           <RouterLink
             to="/questions"
             class="block px-4 py-2 text-light-text hover:text-hightlight dark:hover:bg-dark-secondary/5"
-            @click="isDropdownOpen = false" 
+            @click="isDropdownOpen = false"
           >
             Question
           </RouterLink>

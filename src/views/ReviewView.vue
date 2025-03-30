@@ -1,103 +1,206 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
-import axios from 'axios'
-import Filter from '../components/FilterComp.vue'
+import { ref, onMounted, computed } from 'vue';
+import { RouterLink, useRoute, useRouter } from 'vue-router';
+import axios from 'axios';
+import Filter from '../components/FilterComp.vue';
 
-const formatDate = (date: Date) => {
-  const options: Intl.DateTimeFormatOptions = {
-    day: 'numeric',
-    month: 'long',
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: '2-digit',
     year: 'numeric',
-  }
-  return new Date(date).toLocaleDateString('en-US', options)
-}
+  });
+};
 
 interface Review {
-  Review_ID: number
-  Title: string
-  Position: string
-  Description: string
-  Date: Date
-  Like_Count: number
-  IsQuestion: boolean
-  userName: string
+  id: number;
+  title: string;
+  position?: string;
+  description: string;
+  date: Date;
+  company?: string;
+  userName?: string;
+  likedByUser?: boolean; 
 }
 
-const reviews = ref<Review[]>([])
-const isLoading = ref(true) // loading state
-const searchKeyword = ref('') // search keyword
-const selectedPosition = ref('') // position filter
-const startDate = ref('') // start date filter
-const endDate = ref('') // end date filter
+const reviews = ref<Review[]>([]);
+const isLoading = ref(true);
+const searchKeyword = ref('');
+const selectedPosition = ref('');
+const startDate = ref('');
+const endDate = ref('');
+const route = useRoute();
+const router = useRouter();
+
+const isTokenValid = () => {
+  const token = localStorage.getItem('token');
+  if (!token) return false;
+
+  const payload = JSON.parse(atob(token.split('.')[1])); // Decode JWT Payload
+  const currentTime = Math.floor(Date.now() / 1000); // เวลาปัจจุบันในรูปแบบ Unix Timestamp
+
+  return payload.exp > currentTime; // ตรวจสอบว่า Token ยังไม่หมดอายุ
+};
+
+if (!isTokenValid()) {
+  alert('Session expired. Please log in again.');
+  localStorage.removeItem('token');
+  router.push('/login');
+}
 
 const fetchData = async () => {
   try {
-    const response = await axios.get('http://localhost:3000/review')
-    reviews.value = response.data
+    const token = localStorage.getItem('token'); // ดึง JWT Token จาก Local Storage
+    if (!token) {
+      throw new Error('Unauthorized: No token found');
+    }
+
+    const response = await axios.get('http://localhost:3000/reviews', {
+      headers: {
+        Authorization: `Bearer ${token}`, // เพิ่ม Token ใน Header
+      },
+    });
+
+    // ดึงสถานะการไลค์จาก server แทนที่จะกำหนดค่าเริ่มต้นเป็น false
+    reviews.value = response.data;
   } catch (error) {
-    console.error('Error fetching data', error)
+    console.error('Error fetching data', error);
   } finally {
-    isLoading.value = false // data fetch completed
+    isLoading.value = false;
   }
-}
+};
+
+const toggleLike = async (review: Review) => {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('Unauthorized: No token found');
+    }
+
+    // ส่งคำขอไปยัง API
+    await axios.post(
+      `http://localhost:3000/reviews/${review.id}/like`,
+      { liked: !review.likedByUser },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    // อัปเดตสถานะ liked ใน Frontend
+    review.likedByUser = !review.likedByUser;
+    console.log('Like status updated successfully');
+  } catch (error) {
+    console.error('Error toggling like status', error);
+  }
+};
+
+const handleLogin = async () => {
+  const response = await axios.post('http://localhost:3000/login', {
+    username: username.value,
+    password: password.value,
+  });
+
+  const { access_token } = response.data;
+  localStorage.setItem('token', access_token); // เก็บ Token ใน Local Storage
+};
 
 const positions = computed(() => {
-  const uniquePositions = new Set(reviews.value.map(review => review.Position))
-  return Array.from(uniquePositions)
-})
+  const uniquePositions = new Set(reviews.value.map((review) => review.position).filter(Boolean));
+  return Array.from(uniquePositions);
+});
 
-// Filtered reviews based on search keyword, selected position, and date range
 const filteredReviews = computed(() => {
   return reviews.value.filter((review) => {
     const matchesSearch =
-      review.Title.toLowerCase().includes(searchKeyword.value.toLowerCase()) ||
-      review.Description.toLowerCase().includes(searchKeyword.value.toLowerCase())
-    const matchesPosition = !selectedPosition.value || review.Position === selectedPosition.value // only match if position is selected
+      review.title.toLowerCase().includes(searchKeyword.value.toLowerCase()) ||
+      review.description.toLowerCase().includes(searchKeyword.value.toLowerCase());
 
-    const reviewDate = new Date(review.Date)
+    const matchesPosition = !selectedPosition.value || review.position === selectedPosition.value;
+
+    const reviewDate = new Date(review.date);
     const matchesDateRange =
       (!startDate.value || reviewDate >= new Date(startDate.value)) &&
-      (!endDate.value || reviewDate <= new Date(endDate.value))
+      (!endDate.value || reviewDate <= new Date(endDate.value));
 
-    return matchesSearch && matchesPosition && matchesDateRange
-  })
-})
+    return matchesSearch && matchesPosition && matchesDateRange;
+  });
+});
 
-onMounted(fetchData)
+const sortedReviews = computed(() => {
+  return filteredReviews.value.slice().sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+});
+
+onMounted(fetchData);
+
+
+
 </script>
 
 <template>
+  <div class="flex justify-end px-16 mt-4">
+  <RouterLink
+    :to="{ path: '/admin/add-review', query: { from: 'user' } }"
+    class="bg-gradient-to-b from-button to-button/50 text-white px-4 py-2 rounded-lg shadow-md"
+  >
+    Add review
+  </RouterLink>
+</div>
+  <!-- Filter Component -->
   <Filter
-    class="mt-2"
+    class="mt-4"
     @updateSearch="searchKeyword = $event"
     @updatePosition="selectedPosition = $event"
     @updateStartDate="startDate = $event"
     @updateEndDate="endDate = $event"
     :positions="positions"
   />
-  <div class="font-Prompt px-2 space-y-2 w-full sm:px-12 md:px-16 lg:px-32 lg:py-4 xl:px-56 2xl:px-96">
-    <div class="flex flex-wrap justify-around gap-x-1 gap-y-2">
-      <div
-        v-for="(post, index) in filteredReviews"
-        :key="index"
-        class="flex flex-col items-start font-Prompt border-border border rounded-md gap-y-2 p-2 w-2/3 md:w-[45%] lg:w-[32%]"
-      >
-        <span class="text-sm text-hightlight font-bold">
-          {{ post.Title }}
-        </span>
-        <span class="text-xs text-hightlight font-bold">
-          {{ formatDate(post.Date) }}
-        </span>
-        <span class="text-xs text-text">
-          {{ post.Description }}
-        </span>
+
+  <!-- Review Cards -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 px-16 mt-8 mb-8">
+    <div
+      v-for="review in sortedReviews"
+      :key="review.id"
+      class="border border-border p-4 rounded-lg bg-white shadow"
+    >
+      <h2 class="text-lg font-bold text-hightlight truncate">{{ review.title }}</h2>
+      <p v-if="review.company" class="text-sm font-medium text-gray-600 truncate">{{ review.company }}</p>
+      <p v-else-if="review.position" class="text-sm font-medium text-gray-600 truncate">{{ review.position }}</p>
+      <p class="text-sm mt-2 text-gray-700 line-clamp-2">{{ review.description.substring(0, 60) }}...</p>
+      <small class="text-xs text-gray-400">{{ formatDate(review.date) }}</small>
+      <div class="flex justify-between items-center mt-3">
         <RouterLink
-          :to="`reviews/${post.Review_ID}`"
+          :to="`reviews/${review.id}`"
           class="text-xs font-medium text-white bg-gradient-to-b from-button to-button/40 px-4 py-1 rounded-lg border-border border shadow-sm md:text-sm lg:text-base"
         >
           Read more
         </RouterLink>
+
+        <!-- Like Button -->
+        <div class="flex items-center">
+          <button @click="toggleLike(review)" class="text-xl transition duration-200 focus:outline-none">
+            <i
+              :class="[ 
+                'fas', 
+                'fa-heart', 
+                review.likedByUser ? 'text-red-500' : 'text-gray-400' 
+              ]"
+            ></i>
+          </button>
+        </div>
       </div>
     </div>
+  </div>
+
+  <!-- Empty State -->
+  <div v-if="sortedReviews.length === 0 && !isLoading" class="flex flex-col items-center justify-center py-12">
+    <p class="text-gray-500 font-medium">No reviews found</p>
+  </div>
+
+  <!-- Loading Spinner -->
+  <div v-if="isLoading" class="flex justify-center py-12">
+    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-hightlight"></div>
   </div>
 </template>

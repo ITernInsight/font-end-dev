@@ -1,10 +1,10 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import PostView from '../views/PostView.vue'
 import ReviewView from '../views/ReviewView.vue'
-import QuestionView from '../views/QuestionView.vue'
+import QuestionView from '@/views/QuestionView.vue'
 import PostDetail from '../views/PostDetail.vue'
 import ReviewDetail from '../views/ReviewDetail.vue'
-import QuestionDetail from '../views/QuestionDetail.vue'
+import QuestionDetail from '@/views/QuestionDetail.vue'
 import AdminView from '@/views/admin/AdminView.vue'
 import AddAnnouce from '@/views/admin/AddAnnouce.vue'
 import EditAnnouce from '@/views/admin/EditAnnouce.vue'
@@ -19,6 +19,9 @@ import DetailReview from '@/views/admin/DetailReview.vue'
 import EditQuestion from '@/views/admin/EditQuestion.vue'
 import EditReview from '@/views/admin/EditReview.vue'
 import DetailQuestion from '@/views/admin/DetailQuestion.vue'
+import HomeView from '@/views/HomeView.vue'
+import EditProfile from '../views/EditProfile.vue'
+
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -26,42 +29,40 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
-      redirect: '/login',
-    },
-    {
-      path: '/login',
-      name: 'login',
-      component: LoginView,
-    },
-    {
-      path: '/posts',
-      name: 'posts',
-      component: PostView,
-    },
-    {
-      path: '/posts/:id',
-      name: 'post details',
-      component: PostDetail,
-    },
-    {
-      path: '/reviews',
-      name: 'reviews',
-      component: ReviewView,
-    },
-    {
-      path: '/reviews/:id',
-      name: 'review detail',
-      component: ReviewDetail,
-    },
-    {
-      path: '/questions',
-      name: 'questions',
-      component: QuestionView,
-    },
-    {
-      path: '/questions/:id',
-      name: 'question details',
-      component: QuestionDetail,
+      component: HomeView,
+      redirect: 'posts',
+      children: [
+        {
+          path: 'posts',
+          name: 'posts',
+          component: PostView,
+        },
+        {
+          path: 'posts/:id',
+          name: 'post details',
+          component: PostDetail,
+        },
+        {
+          path: 'reviews',
+          name: 'reviews',
+          component: ReviewView,
+        },
+        {
+          path: 'reviews/:id',
+          name: 'review detail',
+          component: ReviewDetail,
+        },
+        {
+          path: 'questions',
+          name: 'questions',
+          component: QuestionView,
+        },
+        {
+          path: 'questions/:id',
+          name: 'question details',
+          component: QuestionDetail,
+        },
+      ],
     },
     {
       path: '/admin',
@@ -87,7 +88,7 @@ const router = createRouter({
         },
         {
           path: 'question/:id',
-          name: 'question details',
+          name: 'detail question',
           component: DetailQuestion, 
         },
 
@@ -119,7 +120,11 @@ const router = createRouter({
       name: 'edit review',
       component: EditReview,
     },
-    
+    {
+      path: '/edit-review/:id',
+      name: 'edit review(user)',
+      component: EditReview,
+    },
     {
       path: '/admin/question',
       name: 'admin question',
@@ -136,8 +141,24 @@ const router = createRouter({
       name: 'edit question',
       component: EditQuestion,
     },
+    {
+      path: '/edit-question/:id',
+      name: 'edit question (user)',
+      component: EditQuestion,
+    },
     
-    
+    {
+      path: '/login',
+      name: 'login',
+      component: LoginView,
+    },
+    {
+      path: '/edit-profile',
+      name: 'edit profile',
+      component: EditProfile,
+    },
+
+
   ],
 })
 

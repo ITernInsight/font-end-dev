@@ -1,3 +1,129 @@
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue';
+import { RouterLink, useRoute, useRouter } from 'vue-router';
+import axios from 'axios';
+import FilterComp from '@/components/FilterComp.vue';
+
+const questions = ref<any[]>([]);
+const route = useRoute();
+const router = useRouter();
+const showModal = ref(false);
+const deleteId = ref<number | null>(null);
+const deleteTitle = ref('');
+const id = route.params.id;
+
+// ตัวแปรสำหรับ Search Bar & Date Filter
+const searchKeyword = ref('');
+const selectedPosition = ref('');
+const startDate = ref('');
+const endDate = ref('');
+const date = ref('');
+
+// โหลดข้อมูลคำถามจาก API
+const fetchQuestions = async () => {
+  try {
+    const token = localStorage.getItem('token'); // ดึง Token จาก Local Storage
+    if (!token) {
+      throw new Error('Unauthorized: No token found');
+    }
+
+    const response = await axios.get('http://localhost:3000/questions', {
+      headers: {
+        Authorization: `Bearer ${token}`, // ส่ง Token ใน Header
+      },
+    });
+
+    questions.value = response.data;
+    console.log('Questions fetched successfully:', response.data);
+  } catch (error: any) {
+    console.error('Error fetching questions:', error);
+    if (error.response && error.response.status === 401) {
+      alert('Unauthorized: Please log in again.');
+      router.push('/login'); // เปลี่ยนเส้นทางไปยังหน้า Login
+    }
+  }
+};
+
+// ฟังก์ชันกรองข้อมูลคำถาม
+const filteredQuestions = computed(() => {
+  return questions.value.filter((question) => {
+    const matchesSearch =
+      question.title.toLowerCase().includes(searchKeyword.value.toLowerCase()) ||
+      question.description.toLowerCase().includes(searchKeyword.value.toLowerCase());
+
+    const matchesPosition = !selectedPosition.value || question.position === selectedPosition.value;
+
+    const questionDate = new Date(question.date);
+    const matchesDateRange =
+      (!startDate.value || questionDate >= new Date(startDate.value)) &&
+      (!endDate.value || questionDate <= new Date(endDate.value));
+
+    return matchesSearch && matchesPosition && matchesDateRange;
+  });
+});
+
+// เรียงลำดับให้คำถามล่าสุดอยู่ด้านบน
+const sortedQuestions = computed(() => {
+  return filteredQuestions.value.slice().sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+});
+
+// แสดง Modal ยืนยันการลบ
+const confirmDelete = (id: number, title: string) => {
+  deleteId.value = id;
+  deleteTitle.value = title;
+  showModal.value = true;
+};
+
+// ฟังก์ชันลบคำถาม
+const handleDelete = async () => {
+  if (deleteId.value !== null) {
+    try {
+      const token = localStorage.getItem('token'); // ดึง Token จาก Local Storage
+      if (!token) {
+        throw new Error('Unauthorized: No token found');
+      }
+
+      await axios.delete(`http://localhost:3000/questions/${deleteId.value}`, {
+        headers: {
+          Authorization: `Bearer ${token}`, // ส่ง Token ใน Header
+        },
+      });
+
+      questions.value = questions.value.filter((question) => question.id !== deleteId.value);
+      showModal.value = false;
+      deleteId.value = null;
+      deleteTitle.value = '';
+    } catch (error) {
+      console.error('Error deleting question:', error);
+    }
+  }
+};
+
+// ยกเลิกการลบ
+const cancelDelete = () => {
+  showModal.value = false;
+  deleteId.value = null;
+  deleteTitle.value = '';
+};
+
+// ฟังก์ชันจัดรูปแบบวันที่เท่านั้น
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
+};
+
+// โหลดข้อมูลเมื่อ Component ถูกสร้าง
+onMounted(fetchQuestions);
+
+// State to manage dropdown visibility
+const isDropdownOpen = ref(false);
+</script>
+
+
 <template>
   <!-- Header Section -->
   <div class="flex flex-row justify-between items-center w-full px-10">
@@ -42,8 +168,10 @@
     </div>
 
     <!-- ปุ่ม Add Question -->
-    <RouterLink v-if="route.path.includes('/admin/question')" to="/admin/add-question"
-      class="text-white text-xs font-bold bg-gradient-to-b from-button px-4 py-1.5 h-fit to-button/50 shadow-md rounded-lg lg:text-sm">
+    <RouterLink
+    :to="{ path: '/admin/add-question', query: { from: 'admin' } }"
+    class="text-white text-xs font-bold bg-gradient-to-b from-button px-4 py-1.5 h-fit to-button/50 shadow-md rounded-lg lg:text-sm"
+    >
       Add question
     </RouterLink>
   </div>
@@ -62,9 +190,9 @@
       <p class="text-sm mt-2 text-gray-700 line-clamp-2">{{ question.description.substring(0, 60) }}...</p>
       <small class="text-xs text-gray-400">{{ formatDate(question.date) }}</small>
       <div class="flex justify-between items-center mt-3">
-        <RouterLink :to="`/admin/question/${question.id}`" class="bg-gradient-to-b from-button to-button/55 text-white py-1 px-3 rounded">Read more</RouterLink>
+        <router-link :to="{ name: 'detail question', params: { id: question.id } }" class="bg-gradient-to-b from-button to-button/55 text-white py-1 px-3 rounded">Read more</Router-link>
         <div class="flex gap-2">
-          <RouterLink :to="`/admin/edit-question/${question.id}`" class="text-hightlight hover:underline"><i class="fas fa-edit"></i></RouterLink>
+          <router-link :to="{ path: `/edit-question/${question.id}`, query: { from: 'admin' } }" class="text-hightlight hover:underline"><i class="fas fa-edit"></i></router-link>
           <button @click="confirmDelete(question.id, question.title)" class="text-hightlight hover:underline"><i class="fas fa-trash"></i></button>
         </div>
       </div>
@@ -86,99 +214,3 @@
   </div>
 </template>
 
-<script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { RouterLink, useRoute } from 'vue-router'
-import axios from 'axios'
-import FilterComp from '@/components/FilterComp.vue' 
-
-const questions = ref<any[]>([])
-const route = useRoute()
-const showModal = ref(false)
-const deleteId = ref<number | null>(null)
-const deleteTitle = ref('')
-
-// ตัวแปรสำหรับ Search Bar & Date Filter
-const searchKeyword = ref('')
-const selectedPosition = ref('')
-const startDate = ref('')
-const endDate = ref('')
-
-// โหลดข้อมูลคำถามจาก API
-const fetchQuestions = async () => {
-  try {
-    const response = await axios.get('http://localhost:3000/questions')
-    questions.value = response.data
-  } catch (error) {
-    console.error('Error fetching questions:', error)
-  }
-}
-
-// ฟังก์ชันกรองข้อมูลคำถาม
-const filteredQuestions = computed(() => {
-  return questions.value.filter((question) => {
-    const matchesSearch =
-      question.title.toLowerCase().includes(searchKeyword.value.toLowerCase()) ||
-      question.description.toLowerCase().includes(searchKeyword.value.toLowerCase())
-
-    const matchesPosition = !selectedPosition.value || question.position === selectedPosition.value
-
-    const questionDate = new Date(question.date)
-    const matchesDateRange =
-      (!startDate.value || questionDate >= new Date(startDate.value)) &&
-      (!endDate.value || questionDate <= new Date(endDate.value))
-
-    return matchesSearch && matchesPosition && matchesDateRange
-  })
-})
-
-// เรียงลำดับให้คำถามล่าสุดอยู่ด้านบน
-const sortedQuestions = computed(() => {
-  return filteredQuestions.value.slice().sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-})
-
-// แสดง Modal ยืนยันการลบ
-const confirmDelete = (id: number, title: string) => {
-  deleteId.value = id
-  deleteTitle.value = title
-  showModal.value = true
-}
-
-// ฟังก์ชันลบคำถาม
-const handleDelete = async () => {
-  if (deleteId.value !== null) {
-    try {
-      await axios.delete(`http://localhost:3000/questions/${deleteId.value}`)
-      questions.value = questions.value.filter(question => question.id !== deleteId.value)
-      showModal.value = false
-      deleteId.value = null
-      deleteTitle.value = ''
-    } catch (error) {
-      console.error('Error deleting question:', error)
-    }
-  }
-}
-
-// ยกเลิกการลบ
-const cancelDelete = () => {
-  showModal.value = false
-  deleteId.value = null
-  deleteTitle.value = ''
-}
-
-// ฟังก์ชันจัดรูปแบบวันที่เท่านั้น
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString)
-  return date.toLocaleDateString('en-GB', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric'
-  })
-}
-
-// โหลดข้อมูลเมื่อ Component ถูกสร้าง
-onMounted(fetchQuestions)
-
-// State to manage dropdown visibility
-const isDropdownOpen = ref(false)
-</script>

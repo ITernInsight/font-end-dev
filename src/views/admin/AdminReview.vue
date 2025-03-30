@@ -65,7 +65,10 @@
           <div class="flex justify-between items-center mt-3">
             <RouterLink :to="`/admin/review/${review.id}`" class="bg-gradient-to-b from-button to-button/55 text-white py-1 px-3 rounded">Read more</RouterLink>
             <div class="flex gap-2">
-              <RouterLink :to="`/admin/edit-review/${review.id}`" class="text-hightlight hover:underline"><i class="fas fa-edit"></i></RouterLink>
+              <RouterLink :to="`/admin/edit-review/${review.id}?from=admin`" class="text-hightlight hover:underline">
+  <i class="fas fa-edit"></i>
+</RouterLink>
+
               <button @click="confirmDelete(review.id, review.title)" class="text-hightlight hover:underline"><i class="fas fa-trash"></i></button>
             </div>
           </div>
@@ -89,12 +92,13 @@
   
   <script setup lang="ts">
   import { ref, computed, onMounted } from 'vue'
-  import { RouterLink, useRoute } from 'vue-router'
+  import { RouterLink, useRoute, useRouter } from 'vue-router'
   import axios from 'axios'
   import FilterComp from '@/components/FilterComp.vue' 
   
   const reviews = ref<any[]>([])
   const route = useRoute()
+  const router = useRouter()
   const showModal = ref(false)
   const deleteId = ref<number | null>(null)
   const deleteTitle = ref('')
@@ -108,12 +112,27 @@
   // โหลดข้อมูลรีวิวจาก API
   const fetchReviews = async () => {
     try {
-      const response = await axios.get('http://localhost:3000/reviews')
-      reviews.value = response.data
-    } catch (error) {
-      console.error('Error fetching reviews:', error)
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Unauthorized: No token found');
+      }
+  
+      const response = await axios.get('http://localhost:3000/reviews', {
+        headers: {
+          Authorization: `Bearer ${token}`, // ส่ง Token ใน Header
+        },
+      });
+  
+      reviews.value = response.data;
+      console.log('Reviews fetched successfully:', response.data);
+    } catch (error: any) {
+      console.error('Error fetching reviews:', error);
+      if (error.response && error.response.status === 401) {
+        alert('Unauthorized: Please log in again.');
+        router.push('/login'); // เปลี่ยนเส้นทางไปยังหน้า Login
+      }
     }
-  }
+  };
   
   // ฟังก์ชันกรองข้อมูลรีวิว
   const filteredReviews = computed(() => {
@@ -147,18 +166,27 @@
   
   // ฟังก์ชันลบรีวิว
   const handleDelete = async () => {
-    if (deleteId.value !== null) {
-      try {
-        await axios.delete(`http://localhost:3000/reviews/${deleteId.value}`)
-        reviews.value = reviews.value.filter(review => review.id !== deleteId.value)
-        showModal.value = false
-        deleteId.value = null
-        deleteTitle.value = ''
-      } catch (error) {
-        console.error('Error deleting review:', error)
-      }
+  if (deleteId.value !== null) {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) throw new Error('Unauthorized: No token found');
+
+      await axios.delete(`http://localhost:3000/reviews/${deleteId.value}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      reviews.value = reviews.value.filter(review => review.id !== deleteId.value);
+      deleteId.value = null;
+      deleteTitle.value = '';
+      showModal.value = false;
+    } catch (error) {
+      console.error('Error deleting review:', error);
     }
   }
+};
+
   
   // ยกเลิกการลบ
   const cancelDelete = () => {
@@ -183,4 +211,3 @@
   // State to manage dropdown visibility
   const isDropdownOpen = ref(false)
   </script>
-  
