@@ -20,11 +20,13 @@ const defaultUserData: UserData = {
 const user = ref<UserData>({ ...defaultUserData })
 const originalUser = ref<UserData>({ ...defaultUserData }) // 🟢 เก็บค่าก่อนแก้
 
-const editing = ref({
+// แก้ไขประเภทให้กับ `editing` และเพิ่ม `photoUrl`
+const editing = ref<{ [key in keyof UserData]: boolean }>({
   name: false,
   email: false,
   phone: false,
-  position: false
+  position: false,
+  photoUrl: false // เพิ่ม `photoUrl` เข้าไป
 })
 
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -38,18 +40,18 @@ onMounted(() => {
   }
 })
 
-const toggleEdit = (field: keyof typeof editing.value) => {
+const toggleEdit = (field: keyof UserData) => { // เปลี่ยนเป็น keyof UserData
   originalUser.value = { ...user.value } // 🟢 บันทึกก่อนแก้
   editing.value[field] = true
 }
 
-const saveEdit = (field: keyof typeof editing.value) => {
+const saveEdit = (field: keyof UserData) => { // เปลี่ยนเป็น keyof UserData
   editing.value[field] = false
   localStorage.setItem('user', JSON.stringify(user.value))
   window.dispatchEvent(new Event('user-logged-in'))
 }
 
-const cancelEdit = (field: keyof typeof editing.value) => {
+const cancelEdit = (field: keyof UserData) => { // เปลี่ยนเป็น keyof UserData
   user.value[field] = originalUser.value[field]
   editing.value[field] = false
 }
@@ -106,21 +108,21 @@ const handlePhotoChange = (event: Event) => {
           <span class="font-medium text-gray-700 capitalize">{{ field }}</span>
           <div class="flex items-center">
             <input
-              v-if="editing[field]"
-              v-model="user[field]"
+              v-if="editing[field as keyof UserData]"
+              v-model="user[field as keyof UserData]"
               :type="field === 'phone' ? 'tel' : 'text'"
               :maxlength="field === 'phone' ? 10 : undefined"
               @input="field === 'phone' ? (user.phone = user.phone.replace(/\\D/g, '').slice(0, 10)) : null"
               class="border-b border-gray-300 text-right focus:outline-none focus:border-[#00465e]"
             />
-            <span v-else-if="field !== 'email'">{{ user[field] }}</span>
+            <span v-else-if="field !== 'email'">{{ user[field as keyof UserData] }}</span>
             <a v-else :href="`mailto:${user.email}`" class="text-[#00465e]">{{ user.email }}</a>
 
-            <button v-if="!editing[field]" @click="toggleEdit(field)" class="ml-2 edit-btn">✏️</button>
+            <button v-if="!editing[field as keyof UserData]" @click="toggleEdit(field as keyof UserData)" class="ml-2 edit-btn">✏️</button>
 
             <div v-else class="ml-2 flex space-x-2">
-              <button @click="saveEdit(field)" class="text-green-500 hover:text-green-700">✅</button>
-              <button @click="cancelEdit(field)" class="text-red-500 hover:text-red-700">❌</button>
+              <button @click="saveEdit(field as keyof UserData)" class="text-green-500 hover:text-green-700">✅</button>
+              <button @click="cancelEdit(field as keyof UserData)" class="text-red-500 hover:text-red-700">❌</button>
             </div>
           </div>
         </div>

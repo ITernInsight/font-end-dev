@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { ref } from 'vue';
 import axios from 'axios';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
+import { AxiosError } from 'axios';
 
 const adminId = 1; // Replace with actual admin ID
 const title = ref('');
@@ -57,6 +58,7 @@ const validateForm = () => {
 };
 
 // Function to handle form submission
+// ในฟังก์ชัน addReview
 const addReview = async () => {
   try {
     const token = localStorage.getItem('token');
@@ -67,7 +69,7 @@ const addReview = async () => {
     const response = await axios.post(
       'http://localhost:3000/reviews',
       {
-        userId:1,
+        userId: 1,
         title: title.value,
         description: description.value,
         date: date.value,
@@ -82,8 +84,8 @@ const addReview = async () => {
 
     router.push('/admin/review');
     console.log('Review added successfully:', response.data);
-  } catch (error: any) {
-    if (error.response && error.response.data && error.response.data.message) {
+  } catch (error) {
+    if (error instanceof AxiosError && error.response?.data?.message) {
       const messages = error.response.data.message;
       console.log('Validation errors:', messages);
 
@@ -98,6 +100,7 @@ const addReview = async () => {
   }
 };
 
+
 const submitForm = () => {
   if (validateForm()) addReview()
 }
@@ -108,6 +111,7 @@ const closeErrorPopup = () => {
 };
 
 const redirectAfterSubmit = () => {
+  const route = useRoute();
   const from = route.query.from;
   if (from === 'admin') {
     router.push('/admin/review');
@@ -115,6 +119,7 @@ const redirectAfterSubmit = () => {
     router.push('/reviews');
   }
 };
+
 </script>
 
 <template>

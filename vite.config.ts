@@ -15,4 +15,8 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     },
   },
+  server: {
+    host: '0.0.0.0', // ให้สามารถเข้าถึงจากภายนอก container
+    port: 5173,       // ตั้งค่าพอร์ตที่ต้องการ
+  },
 })

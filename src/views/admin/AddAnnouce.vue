@@ -17,11 +17,11 @@ const isLoading = ref(true) // loading state
 const title = ref('')
 const subtitle = ref('')
 const description = ref('')
-const position = ref(<string[]>[])
-const startDate = ref(Date)
+const position = ref<string[]>([]) // Adjusted type to string[]
+const startDate = ref(new Date()) // Corrected initialization of startDate
 const email = ref('')
 const tel = ref('')
-const endDate = ref(Date)
+const endDate = ref(new Date()) // Corrected initialization of endDate
 const companyId = ref(1)
 const router = useRouter()
 
@@ -121,10 +121,17 @@ const addAnnouncement = async () => {
 
     router.push('/admin/annouce');
     console.log('Announcement added successfully:', response.data);
-  } catch (error) {
-    console.error('Error adding announcement:', error.response?.data || error.message);
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      // ตอนนี้คุณสามารถเข้าถึง error.message ได้อย่างปลอดภัย
+      console.error('Error adding announcement:', error.message);
+    } else {
+      // หาก error ไม่ใช่ instance ของ Error ให้แสดงข้อความที่เป็นประเภท unknown
+      console.error('Unknown error:', error);
+    }
   }
 };
+
 
 const submitForm = () => {
   if (validateForm()) {
@@ -180,7 +187,7 @@ const formatPhone = (event: Event) => {
   } else if (value.length > 6) {
     value = `${value.slice(0, 3)}-${value.slice(3, 6)}-${value.slice(6, 10)}`
   }
-  ;(event.target as HTMLInputElement).value = value
+  ; (event.target as HTMLInputElement).value = value
 }
 
 const closeErrorPopup = () => {
@@ -205,21 +212,11 @@ const logDates = () => {
       </div>
       <div class="mb-4">
         <label>Company <span class="text-red-500">*</span></label>
-        <input
-          type="text"
-          @input="handleCompanyInput"
-          v-model="search"
-          class="w-full border rounded-lg px-3 py-2"
-          required
-          placeholder="Select a company."
-        />
+        <input type="text" @input="handleCompanyInput" v-model="search" class="w-full border rounded-lg px-3 py-2"
+          required placeholder="Select a company." />
         <ul v-show="searchResult.length && isOpen" class="border border-border">
-          <li
-            v-for="(company, index) in searchResult"
-            :key="index"
-            @click="setSelectedId(company.id, company.companyName)"
-            class="cursor-pointer hover:bg-surface p-1"
-          >
+          <li v-for="(company, index) in searchResult" :key="index"
+            @click="setSelectedId(company.id, company.companyName)" class="cursor-pointer hover:bg-surface p-1">
             {{ company.companyName }}
           </li>
         </ul>
@@ -234,29 +231,16 @@ const logDates = () => {
       <!-- Dropdown Custom สำหรับเลือกตำแหน่งงาน -->
       <div class="relative mb-4">
         <label>Position <span class="text-red-500">*</span></label>
-        <div
-          @click="toggleDropdown"
-          class="w-full border rounded-lg px-3 py-2 flex justify-between items-center cursor-pointer"
-        >
+        <div @click="toggleDropdown"
+          class="w-full border rounded-lg px-3 py-2 flex justify-between items-center cursor-pointer">
           <span>{{ position.length > 0 ? position.join(', ') : 'Select Position' }}</span>
           <i class="fa fa-chevron-down"></i>
         </div>
 
-        <div
-          v-if="isDropdownOpen"
-          class="absolute w-full mt-1 bg-white border rounded shadow-md max-h-64 overflow-y-auto z-10"
-        >
-          <div
-            v-for="pos in positions"
-            :key="pos"
-            class="flex items-center px-3 py-2 hover:bg-blue-50 cursor-pointer"
-          >
-            <input
-              type="checkbox"
-              :value="pos"
-              v-model="position"
-              class="form-checkbox h-4 w-4 text-blue-600 mr-2"
-            />
+        <div v-if="isDropdownOpen"
+          class="absolute w-full mt-1 bg-white border rounded shadow-md max-h-64 overflow-y-auto z-10">
+          <div v-for="pos in positions" :key="pos" class="flex items-center px-3 py-2 hover:bg-blue-50 cursor-pointer">
+            <input type="checkbox" :value="pos" v-model="position" class="form-checkbox h-4 w-4 text-blue-600 mr-2" />
             <span>{{ pos }}</span>
           </div>
         </div>
@@ -264,99 +248,68 @@ const logDates = () => {
 
       <div class="mb-4">
         <label>Subtitle <span class="text-xs text-red-500">(Subtitle should not exceed 255 characters. )</span></label>
-        <textarea
-          v-model="subtitle"
-          class="w-full border rounded-lg px-3 py-2"
-          maxlength="255"
-          rows="2"
-        ></textarea>
+        <textarea v-model="subtitle" class="w-full border rounded-lg px-3 py-2" maxlength="255" rows="2"></textarea>
       </div>
-
 
       <div class="mb-4">
         <label>Description <span class="text-red-500">*</span></label>
-        <textarea
-          v-model="description"
-          @input="handleInput"
-          class="w-full border rounded-lg px-3 py-2"
-          rows="5"
-          required
-        ></textarea>
+        <textarea v-model="description" @input="handleInput" class="w-full border rounded-lg px-3 py-2" rows="5"
+          required></textarea>
       </div>
       <div class="mb-4">
         <label>Email <span class="text-red-500">*</span></label>
-        <input
-          type="email"
-          v-model="email"
-          class="w-full border rounded-lg px-3 py-2"
-          required
-          placeholder="example@email.com"
-        />
+        <input type="email" v-model="email" class="w-full border rounded-lg px-3 py-2" required
+          placeholder="example@email.com" />
       </div>
       <div class="mb-4">
         <label>Tel <span class="text-red-500">*</span></label>
-        <input
-          type="tel"
-          v-model="tel"
-          class="w-full border rounded-lg px-3 py-2"
-          required
-          @input="formatPhone"
-          placeholder="080-123-4567"
-        />
+        <input type="tel" v-model="tel" class="w-full border rounded-lg px-3 py-2" required @input="formatPhone"
+          placeholder="080-123-4567" />
       </div>
       <div class="flex flex-row justify-start w-full gap-2 *:">
         <div class="mb-4 flex flex-col w-full">
           <label>Start Date</label>
-          <input type="date" v-model="startDate" class="mt-1 border rounded-lg px-3 py-2" @change="logDates"/>
+          <input type="date" v-model="startDate" class="mt-1 border rounded-lg px-3 py-2" @change="logDates" />
         </div>
         <div class="mb-4 flex flex-col w-full">
           <label>End Date <span class="text-red-500">*</span></label>
-          <input
-            type="date"
-            v-model="endDate"
-            class="mt-1 border rounded-lg px-3 py-2"
-            :min="startDate"
-            @change="logDates"
-            required
-          />
+          <input type="date" v-model="endDate" class="mt-1 border rounded-lg px-3 py-2"
+            :min="startDate.toISOString().split('T')[0]" @change="logDates" required />
         </div>
       </div>
 
       <div class="flex justify-center space-x-4 mt-4">
-        <RouterLink
-          to="/admin/annouce"
-          type="button"
-          class="text-white text-xs font-bold bg-gradient-to-b from-button px-4 py-1.5 h-fit to-button/55 shadow-md rounded-lg lg:text-sm"
-        >
+        <RouterLink to="/admin/annouce" type="button"
+          class="text-white text-xs font-bold bg-gradient-to-b from-button px-4 py-1.5 h-fit to-button/55 shadow-md rounded-lg lg:text-sm">
           Cancel
         </RouterLink>
-        <button
-          type="submit"
-          class="text-white text-xs font-bold bg-gradient-to-b from-button px-4 py-1.5 h-fit to-button/55 shadow-md rounded-lg lg:text-sm"
-        >
+        <button type="submit"
+          class="text-white text-xs font-bold bg-gradient-to-b from-button px-4 py-1.5 h-fit to-button/55 shadow-md rounded-lg lg:text-sm">
           Submit
         </button>
       </div>
     </form>
   </div>
 
-  <div
-    v-if="showError && errorMessages.length > 0"
-    class="fixed inset-0 flex justify-center items-center bg-black bg-opacity-50 z-50"
-  >
+  <div v-if="showError && errorMessages.length > 0"
+    class="fixed inset-0 flex justify-center items-center bg-black bg-opacity-50 z-50">
     <div class="bg-white p-6 rounded-lg w-80">
       <h3 class="text-lg font-bold mb-4">
         <ul>
-        <li v-for="(message, index) in errorMessages" :key="index">
-          {{ message }}
-        </li>
-      </ul>
+          <li v-for="(message, index) in errorMessages" :key="index">
+            {{ message }}
+          </li>
+        </ul>
       </h3>
       <div class="flex justify-between gap-4">
         <button @click="closeErrorPopup" class="w-full bg-red-600 text-white py-2 rounded-md">
-          Ok
+          Close
         </button>
       </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+/* Add your custom styles here */
+</style>

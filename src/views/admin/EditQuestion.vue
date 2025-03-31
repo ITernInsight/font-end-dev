@@ -111,8 +111,8 @@ const redirectBack = () => {
 
 const saveAndRedirect = async () => {
   try {
-    await saveQuestion(); 
-    redirectBack();      
+    await submitForm();
+    redirectBack();
   } catch (error) {
     console.error('Error saving:', error);
   }

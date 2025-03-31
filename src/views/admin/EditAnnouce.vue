@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from 'vue';
 import axios from 'axios';
 import router from '@/router';
 import { useRoute } from 'vue-router';
+import { AxiosError } from 'axios';
 
 interface Company {
   id: number
@@ -113,16 +114,22 @@ const EditAnnoucement = async () => {
 
     console.log('Announcement updated successfully:', response.data);
     router.push('/admin/annouce'); // เปลี่ยนเส้นทางหลังจากแก้ไขสำเร็จ
-  } catch (error: any) {
-    if (error.response && error.response.data && error.response.data.message) {
-      const messages = error.response.data.message
-      console.log('Validation errors:', messages)
-      errorMessages.value = messages
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      // จัดการข้อผิดพลาดที่เกี่ยวกับ axios
+      if (error.response && error.response.data && error.response.data.message) {
+        const messages = error.response.data.message;
+        console.log('Validation errors:', messages);
+        errorMessages.value = messages;
+      }
+    } else if (error instanceof Error) {
+      // จัดการข้อผิดพลาดทั่วไป
+      console.error('Error adding announcement:', error.message);
     } else {
-      console.error('Error adding announcement:', error)
+      console.error('An unknown error occurred:', error);
     }
   }
-}
+};
 
 const closeErrorPopup = () => {
   showError.value = false
@@ -185,8 +192,16 @@ const fetchPostDetail = async () => {
     companyId.value = post.value.company.id;
     companyName.value = post.value.company.companyName;
     search.value = post.value.company.companyName;
-  } catch (error) {
-    console.error('Error fetching data:', error.response?.data || error.message);
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      // จัดการข้อผิดพลาดจาก axios
+      console.error('Error fetching data:', error.response?.data || error.message);
+    } else if (error instanceof Error) {
+      // จัดการข้อผิดพลาดทั่วไป
+      console.error('Error fetching data:', error.message);
+    } else {
+      console.error('An unknown error occurred:', error);
+    }
   } finally {
     isLoading.value = false;
   }
@@ -371,7 +386,7 @@ const toggleDropdown = () => {
             type="date"
             v-model="startDate"
             class="mt-1 border rounded-lg px-3 py-2"
-          />    
+          />
         </div>
         <div class="mb-4 flex flex-col w-full">
           <label>End Date <span class="text-red-500">*</span></label>
@@ -379,7 +394,7 @@ const toggleDropdown = () => {
             type="date"
             v-model="endDate"
             class="mt-1 border rounded-lg px-3 py-2"
-            :min="startDate ? startDate : undefined" 
+            :min="startDate ? startDate : undefined"
             required
           />
         </div>

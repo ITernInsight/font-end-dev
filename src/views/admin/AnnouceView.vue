@@ -3,6 +3,7 @@ import { computed, ref, onMounted } from 'vue'
 import axios from 'axios'
 import Filter from '../../components/FilterComp.vue'
 import router from '@/router'
+import { AxiosError } from 'axios';
 
 interface Company {
   id: number
@@ -45,8 +46,12 @@ const fetchData = async () => {
     });
 
     posts.value = response.data;
-  } catch (error) {
-    console.error('Error fetching posts:', error.response?.data || error.message);
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error('Error fetching posts:', error.message);
+    } else {
+      console.error('An unknown error occurred:', error);
+    }
   } finally {
     isLoading.value = false; // ตั้งค่า isLoading เป็น false ไม่ว่าจะสำเร็จหรือเกิดข้อผิดพลาด
   }
@@ -67,8 +72,16 @@ const deleteAnnouncement = async (id: number) => {
 
     console.log('Announcement deleted successfully');
     fetchData(); // Refresh the list after deletion
-  } catch (error) {
-    console.error('Error deleting announcement:', error.response?.data || error.message);
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      // การจัดการข้อผิดพลาดจาก axios
+      console.error('Error deleting announcement:', error.response?.data || error.message);
+    } else if (error instanceof Error) {
+      // การจัดการข้อผิดพลาดทั่วไป
+      console.error('Error deleting announcement:', error.message);
+    } else {
+      console.error('An unknown error occurred:', error);
+    }
   }
 };
 

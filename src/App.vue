@@ -11,7 +11,7 @@ const isLoggedIn = ref(false)
 const checkLoginStatus = () => {
   const user = localStorage.getItem('user')
   try {
-    isLoggedIn.value = !!JSON.parse(user) // ตรวจสอบว่า user มีค่าและเป็น JSON ที่ถูกต้อง
+    isLoggedIn.value = !!JSON.parse(user ?? 'null') // ตรวจสอบว่า user มีค่าและเป็น JSON ที่ถูกต้อง
   } catch {
     isLoggedIn.value = false // หาก JSON.parse ล้มเหลว ให้ตั้งค่าเป็น false
   }

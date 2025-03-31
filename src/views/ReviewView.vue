@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
-import { RouterLink, useRoute, useRouter } from 'vue-router';
+import { RouterLink, useRouter } from 'vue-router';
 import axios from 'axios';
 import Filter from '../components/FilterComp.vue';
 
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-GB', {
+// ฟังก์ชันการฟอร์แมทวันที่
+const formatDate = (date: string | Date) => {
+  const dateObj = new Date(date);
+  return dateObj.toLocaleDateString('en-GB', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
@@ -21,7 +22,7 @@ interface Review {
   date: Date;
   company?: string;
   userName?: string;
-  likedByUser?: boolean; 
+  likedByUser?: boolean;
 }
 
 const reviews = ref<Review[]>([]);
@@ -30,9 +31,9 @@ const searchKeyword = ref('');
 const selectedPosition = ref('');
 const startDate = ref('');
 const endDate = ref('');
-const route = useRoute();
 const router = useRouter();
 
+// ตรวจสอบการหมดอายุของ Token
 const isTokenValid = () => {
   const token = localStorage.getItem('token');
   if (!token) return false;
@@ -43,6 +44,7 @@ const isTokenValid = () => {
   return payload.exp > currentTime; // ตรวจสอบว่า Token ยังไม่หมดอายุ
 };
 
+// ถ้า token หมดอายุให้ลบ token และเปลี่ยนเส้นทางไปยังหน้า Login
 if (!isTokenValid()) {
   alert('Session expired. Please log in again.');
   localStorage.removeItem('token');
@@ -51,18 +53,17 @@ if (!isTokenValid()) {
 
 const fetchData = async () => {
   try {
-    const token = localStorage.getItem('token'); // ดึง JWT Token จาก Local Storage
+    const token = localStorage.getItem('token');
     if (!token) {
       throw new Error('Unauthorized: No token found');
     }
 
     const response = await axios.get('http://localhost:3000/reviews', {
       headers: {
-        Authorization: `Bearer ${token}`, // เพิ่ม Token ใน Header
+        Authorization: `Bearer ${token}`,
       },
     });
 
-    // ดึงสถานะการไลค์จาก server แทนที่จะกำหนดค่าเริ่มต้นเป็น false
     reviews.value = response.data;
   } catch (error) {
     console.error('Error fetching data', error);
@@ -71,6 +72,7 @@ const fetchData = async () => {
   }
 };
 
+// ฟังก์ชันการ toggle like
 const toggleLike = async (review: Review) => {
   try {
     const token = localStorage.getItem('token');
@@ -78,7 +80,6 @@ const toggleLike = async (review: Review) => {
       throw new Error('Unauthorized: No token found');
     }
 
-    // ส่งคำขอไปยัง API
     await axios.post(
       `http://localhost:3000/reviews/${review.id}/like`,
       { liked: !review.likedByUser },
@@ -89,7 +90,6 @@ const toggleLike = async (review: Review) => {
       }
     );
 
-    // อัปเดตสถานะ liked ใน Frontend
     review.likedByUser = !review.likedByUser;
     console.log('Like status updated successfully');
   } catch (error) {
@@ -97,21 +97,13 @@ const toggleLike = async (review: Review) => {
   }
 };
 
-const handleLogin = async () => {
-  const response = await axios.post('http://localhost:3000/login', {
-    username: username.value,
-    password: password.value,
-  });
-
-  const { access_token } = response.data;
-  localStorage.setItem('token', access_token); // เก็บ Token ใน Local Storage
-};
-
+// กรองตำแหน่งที่ไม่ซ้ำ
 const positions = computed(() => {
   const uniquePositions = new Set(reviews.value.map((review) => review.position).filter(Boolean));
-  return Array.from(uniquePositions);
+  return Array.from(uniquePositions) as string[];
 });
 
+// การกรองรีวิวที่แสดง
 const filteredReviews = computed(() => {
   return reviews.value.filter((review) => {
     const matchesSearch =
@@ -129,25 +121,25 @@ const filteredReviews = computed(() => {
   });
 });
 
+// การจัดเรียงรีวิวตามวันที่
 const sortedReviews = computed(() => {
   return filteredReviews.value.slice().sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 });
 
 onMounted(fetchData);
-
-
-
 </script>
+
 
 <template>
   <div class="flex justify-end px-16 mt-4">
-  <RouterLink
-    :to="{ path: '/admin/add-review', query: { from: 'user' } }"
-    class="bg-gradient-to-b from-button to-button/50 text-white px-4 py-2 rounded-lg shadow-md"
-  >
-    Add review
-  </RouterLink>
-</div>
+    <RouterLink
+      :to="{ path: '/admin/add-review', query: { from: 'user' } }"
+      class="bg-gradient-to-b from-button to-button/50 text-white px-4 py-2 rounded-lg shadow-md"
+    >
+      Add review
+    </RouterLink>
+  </div>
+
   <!-- Filter Component -->
   <Filter
     class="mt-4"
@@ -182,10 +174,10 @@ onMounted(fetchData);
         <div class="flex items-center">
           <button @click="toggleLike(review)" class="text-xl transition duration-200 focus:outline-none">
             <i
-              :class="[ 
-                'fas', 
-                'fa-heart', 
-                review.likedByUser ? 'text-red-500' : 'text-gray-400' 
+              :class="[
+                'fas',
+                'fa-heart',
+                review.likedByUser ? 'text-red-500' : 'text-gray-400'
               ]"
             ></i>
           </button>
