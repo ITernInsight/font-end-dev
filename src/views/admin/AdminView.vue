@@ -36,6 +36,15 @@ onMounted(() => {
       class="relative bg-gray-200 w-full h-fit max-h-[520px]"
     />
     
+    <div class="absolute left-16 top-48 text-white z-10 flex flex-row items-start">
+      <div class="w-[20px] h-[256px] bg-white mr-4 rounded-sm"></div>
+
+      <div class="flex flex-col leading-tight text-8xl font-bold uppercase space-y-4">
+        <p>TERN</p>
+        <p>NSIGHT</p>
+      </div>
+    </div>
+
     <div class="flex flex-row justify-between items-center w-full px-10">
       <!-- Left Section -->
       <div class="flex flex-row justify-center flex-1">

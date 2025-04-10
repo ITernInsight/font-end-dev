@@ -60,7 +60,6 @@ const filterSuggestions = () => {
     u.username.toLowerCase().includes(username.value.toLowerCase())
   );
 
-  // ถ้า match username พอดี ให้กรอกรหัสทันทีโดยไม่ต้องคลิก
   const exact = savedUsers.value.find(u => u.username === username.value);
   if (exact) {
     password.value = exact.password;
@@ -148,13 +147,24 @@ onMounted(() => {
           class="w-full border border-gray-300 px-4 py-2 rounded"
           required
         />
-        <div class="flex items-center gap-2">
-          <input type="checkbox" id="remember" v-model="rememberMe" />
-          <label for="remember" class="text-sm">Remember me</label>
+
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <input type="checkbox" id="remember" v-model="rememberMe" />
+            <label for="remember" class="text-sm">Remember me</label>
+          </div>
+          <button
+            type="button"
+            @click="router.push('/register')"
+            class="text-sm text-teal-700 hover:underline"
+          >
+            Register
+          </button>
         </div>
+
         <button
           type="submit"
-          class="w-full bg-teal-700 hover:bg-teal-800 text-white font-semibold py-2 rounded shadow"
+          class="w-full bg-gradient-to-b from-button to-button/50 text-white px-4 py-2 rounded-lg shadow-md"
         >
           LOG IN
         </button>

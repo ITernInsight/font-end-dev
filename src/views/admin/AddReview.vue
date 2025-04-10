@@ -1,14 +1,19 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import axios from 'axios';
+<<<<<<< HEAD
 import { useRouter, useRoute } from 'vue-router';
 import { AxiosError } from 'axios';
+=======
+import { useRouter,useRoute } from 'vue-router';
+>>>>>>> 70133af (Initial commit)
 
-const adminId = 1; // Replace with actual admin ID
+const adminId = 1; 
 const title = ref('');
 const description = ref('');
 const date = ref('');
 const router = useRouter();
+const route = useRoute();
 
 const errorMessages = ref<string[]>([]);
 const showError = ref(false);
@@ -43,22 +48,41 @@ const handleInput = (event: Event) => {
 };
 
 const validateForm = () => {
-  errorMessages.value = [];
+  errorMessages.value = []
   if (containsProfanity(title.value)) {
-    errorMessages.value.push('Title contains inappropriate language.');
+    errorMessages.value.push('Title contains inappropriate language.')
   }
   if (containsProfanity(description.value)) {
-    errorMessages.value.push('Description contains inappropriate language.');
+    errorMessages.value.push('Description contains inappropriate language.')
+  }
+  if (!title.value.trim()) {
+    errorMessages.value.push('Title should not be empty.')
+  }
+  if (!description.value.trim()) {
+    errorMessages.value.push('Description should not be empty.')
   }
   if (errorMessages.value.length > 0) {
-    showError.value = true;
-    return false;
+    showError.value = true
+    return false
   }
-  return true;
-};
+  return true
+}
 
+
+const redirectBack = () => {
+  const from = route.query.from
+  if (from === 'admin') {
+    router.push('/admin/review')
+  } else {
+    router.push('/reviews')
+  }
+}
+
+<<<<<<< HEAD
 // Function to handle form submission
 // ในฟังก์ชัน addReview
+=======
+>>>>>>> 70133af (Initial commit)
 const addReview = async () => {
   try {
     const token = localStorage.getItem('token');
@@ -69,7 +93,11 @@ const addReview = async () => {
     const response = await axios.post(
       'http://localhost:3000/reviews',
       {
+<<<<<<< HEAD
         userId: 1,
+=======
+        userId:adminId,
+>>>>>>> 70133af (Initial commit)
         title: title.value,
         description: description.value,
         date: date.value,
@@ -80,8 +108,9 @@ const addReview = async () => {
           Authorization: `Bearer ${token}`,
         },
       }
-    );
+    )
 
+<<<<<<< HEAD
     router.push('/admin/review');
     console.log('Review added successfully:', response.data);
   } catch (error) {
@@ -92,13 +121,21 @@ const addReview = async () => {
       // แปลงข้อความข้อผิดพลาดให้เป็น Array (รองรับข้อความหลายบรรทัด)
       errorMessages.value = Array.isArray(messages) ? messages : [messages];
       showError.value = true;
+=======
+      redirectBack()
+    console.log('Reviews added successfully:', response.data)
+  } catch (error: any) {
+    if (error.response?.data?.message) {
+      const messages = error.response.data.message
+      errorMessages.value = Array.isArray(messages) ? messages : [messages]
+      showError.value = true
+>>>>>>> 70133af (Initial commit)
     } else {
-      console.error('Error adding review:', error);
-      errorMessages.value = ['An unexpected error occurred. Please try again later.'];
-      showError.value = true;
+      console.error('Error adding review:', error)
     }
   }
-};
+}
+  
 
 
 const submitForm = () => {
@@ -110,6 +147,7 @@ const closeErrorPopup = () => {
   showError.value = false;
 };
 
+<<<<<<< HEAD
 const redirectAfterSubmit = () => {
   const route = useRoute();
   const from = route.query.from;
@@ -119,6 +157,8 @@ const redirectAfterSubmit = () => {
     router.push('/reviews');
   }
 };
+=======
+>>>>>>> 70133af (Initial commit)
 
 </script>
 
@@ -160,14 +200,13 @@ const redirectAfterSubmit = () => {
       </div>
 
       <div class="flex justify-center space-x-4 mt-4">
-        <RouterLink
-          to="/admin/review"
-          @click="redirectAfterSubmit"
+        <button
+          @click="redirectBack"
           type="button"
           class="text-white text-xs font-bold bg-gradient-to-b from-button px-4 py-1.5 h-fit to-button/55 shadow-md rounded-lg lg:text-sm"
         >
           Cancel
-        </RouterLink>
+        </button>
         <button
           type="submit"
           class="text-white text-xs font-bold bg-gradient-to-b from-button px-4 py-1.5 h-fit to-button/55 shadow-md rounded-lg lg:text-sm"

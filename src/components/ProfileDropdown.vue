@@ -22,7 +22,7 @@ const logout = () => {
   localStorage.removeItem('user');
   isLoggedIn.value = false;
   window.dispatchEvent(new Event('user-logged-in'));
-  router.push('/login');
+  router.push('/posts');
 };
 
 const updateUser = () => {
