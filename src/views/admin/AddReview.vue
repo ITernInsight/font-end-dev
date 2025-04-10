@@ -1,12 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import axios from 'axios';
-<<<<<<< HEAD
-import { useRouter, useRoute } from 'vue-router';
-import { AxiosError } from 'axios';
-=======
 import { useRouter,useRoute } from 'vue-router';
->>>>>>> 70133af (Initial commit)
 
 const adminId = 1; 
 const title = ref('');
@@ -78,11 +73,6 @@ const redirectBack = () => {
   }
 }
 
-<<<<<<< HEAD
-// Function to handle form submission
-// ในฟังก์ชัน addReview
-=======
->>>>>>> 70133af (Initial commit)
 const addReview = async () => {
   try {
     const token = localStorage.getItem('token');
@@ -93,11 +83,7 @@ const addReview = async () => {
     const response = await axios.post(
       'http://localhost:3000/reviews',
       {
-<<<<<<< HEAD
-        userId: 1,
-=======
         userId:adminId,
->>>>>>> 70133af (Initial commit)
         title: title.value,
         description: description.value,
         date: date.value,
@@ -110,18 +96,6 @@ const addReview = async () => {
       }
     )
 
-<<<<<<< HEAD
-    router.push('/admin/review');
-    console.log('Review added successfully:', response.data);
-  } catch (error) {
-    if (error instanceof AxiosError && error.response?.data?.message) {
-      const messages = error.response.data.message;
-      console.log('Validation errors:', messages);
-
-      // แปลงข้อความข้อผิดพลาดให้เป็น Array (รองรับข้อความหลายบรรทัด)
-      errorMessages.value = Array.isArray(messages) ? messages : [messages];
-      showError.value = true;
-=======
       redirectBack()
     console.log('Reviews added successfully:', response.data)
   } catch (error: any) {
@@ -129,7 +103,6 @@ const addReview = async () => {
       const messages = error.response.data.message
       errorMessages.value = Array.isArray(messages) ? messages : [messages]
       showError.value = true
->>>>>>> 70133af (Initial commit)
     } else {
       console.error('Error adding review:', error)
     }
@@ -147,18 +120,6 @@ const closeErrorPopup = () => {
   showError.value = false;
 };
 
-<<<<<<< HEAD
-const redirectAfterSubmit = () => {
-  const route = useRoute();
-  const from = route.query.from;
-  if (from === 'admin') {
-    router.push('/admin/review');
-  } else {
-    router.push('/reviews');
-  }
-};
-=======
->>>>>>> 70133af (Initial commit)
 
 </script>
 

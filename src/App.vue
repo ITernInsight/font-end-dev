@@ -11,11 +11,7 @@ const isLoggedIn = ref(false)
 const checkLoginStatus = () => {
   const user = localStorage.getItem('user')
   try {
-<<<<<<< HEAD
-    isLoggedIn.value = !!JSON.parse(user ?? 'null') // ตรวจสอบว่า user มีค่าและเป็น JSON ที่ถูกต้อง
-=======
     isLoggedIn.value = !!JSON.parse(user)
->>>>>>> 70133af (Initial commit)
   } catch {
     isLoggedIn.value = false
   }
@@ -61,11 +57,6 @@ watch(
   <RouterView />
 
   <footer
-<<<<<<< HEAD
-    class="relative bottom-0 flex flex-col gap-y-2 w-full bg-light-background dark:bg-dark-background pt-4 border-t border-light-border dark:border-dark-border font-Noto"
-  ></footer>
-=======
     class="relative bottom-0 flex flex-col gap-y-2 w-full bg-light-background dark:bg-dark-background pt-4 border-t border-light-border dark:border-dark-border font-Noto">
   </footer>
->>>>>>> 70133af (Initial commit)
 </template>
