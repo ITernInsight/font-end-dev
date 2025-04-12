@@ -17,8 +17,13 @@ function handleLogin() {
   isLoggedIn.value = true;
 }
 
-// Event handler สำหรับการล็อกเอาท์
 function handleLogout() {
+  localStorage.removeItem('token');
+  isLoggedIn.value = false;
+  window.dispatchEvent(new Event('user-logged-out'));
+}
+
+function handleLoggedOutEvent() {
   isLoggedIn.value = false;
 }
 
@@ -31,15 +36,16 @@ function handleStorageChange(event: StorageEvent) {
 onMounted(() => {
   checkLoginStatus();
   window.addEventListener('user-logged-in', handleLogin);
-  window.addEventListener('user-logged-out', handleLogout);
+  window.addEventListener('user-logged-out', handleLoggedOutEvent);
   window.addEventListener('storage', handleStorageChange);
 });
 
 onUnmounted(() => {
   window.removeEventListener('user-logged-in', handleLogin);
-  window.removeEventListener('user-logged-out', handleLogout);
+  window.removeEventListener('user-logged-out', handleLoggedOutEvent);
   window.removeEventListener('storage', handleStorageChange);
 });
+
 </script>
 
 <template>

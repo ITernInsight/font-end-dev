@@ -20,10 +20,12 @@ const defaultUserData = {
 
 const logout = () => {
   localStorage.removeItem('user');
+  localStorage.removeItem('token'); 
   isLoggedIn.value = false;
-  window.dispatchEvent(new Event('user-logged-in'));
+  window.dispatchEvent(new Event('user-logged-out'));
   router.push('/posts');
 };
+
 
 const updateUser = () => {
   const stored = localStorage.getItem('user');
