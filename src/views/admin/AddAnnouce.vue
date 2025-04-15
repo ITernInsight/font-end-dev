@@ -200,6 +200,7 @@ const logDates = () => {
   console.log('End Date:', endDate.value);
 }
 
+
 </script>
 
 <template>

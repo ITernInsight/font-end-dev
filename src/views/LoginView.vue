@@ -46,7 +46,14 @@ const handleLogin = async () => {
       router.push('/');
     }
   } catch (error: any) {
-    errorMessage.value = error.response?.data?.message || 'Login failed';
+    const status = error.response?.status;
+    if (status === 401) {
+      errorMessage.value = 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง';
+    } else if (status === 403) {
+      errorMessage.value = 'คุณไม่มีสิทธิ์เข้าถึง';
+    } else {
+      errorMessage.value = error.response?.data?.message || 'เกิดข้อผิดพลาดจากระบบ';
+    }
     showErrorModal.value = true;
   }
 };
@@ -92,6 +99,7 @@ onMounted(() => {
   }
 });
 </script>
+
 
 <template>
   <div class="login-page flex h-screen overflow-hidden">

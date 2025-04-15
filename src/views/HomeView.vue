@@ -1,29 +1,21 @@
 <script setup lang="ts">
 import { RouterLink, RouterView, useRoute } from 'vue-router';
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, watch } from 'vue';
 
 const route = useRoute();
 const isDropdownOpen = ref(false);
 const isLoggedIn = ref(false);
 
-// ฟังก์ชันตรวจสอบสถานะการล็อกอิน
 function checkLoginStatus() {
   const token = localStorage.getItem('token');
   isLoggedIn.value = Boolean(token && token !== 'undefined' && token !== '');
 }
 
-// Event handler สำหรับการล็อกอิน
 function handleLogin() {
   isLoggedIn.value = true;
 }
 
 function handleLogout() {
-  localStorage.removeItem('token');
-  isLoggedIn.value = false;
-  window.dispatchEvent(new Event('user-logged-out'));
-}
-
-function handleLoggedOutEvent() {
   isLoggedIn.value = false;
 }
 
@@ -34,18 +26,17 @@ function handleStorageChange(event: StorageEvent) {
 }
 
 onMounted(() => {
-  checkLoginStatus();
+  checkLoginStatus(); // ✅ โหลดหน้าเช็คสถานะก่อน
   window.addEventListener('user-logged-in', handleLogin);
-  window.addEventListener('user-logged-out', handleLoggedOutEvent);
+  window.addEventListener('user-logged-out', handleLogout);
   window.addEventListener('storage', handleStorageChange);
 });
 
 onUnmounted(() => {
   window.removeEventListener('user-logged-in', handleLogin);
-  window.removeEventListener('user-logged-out', handleLoggedOutEvent);
+  window.removeEventListener('user-logged-out', handleLogout);
   window.removeEventListener('storage', handleStorageChange);
 });
-
 </script>
 
 <template>

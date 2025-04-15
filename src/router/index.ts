@@ -163,6 +163,8 @@ const router = createRouter({
       name: 'edit profile',
       component: EditProfile,
     },
+ 
+  
 
 
   ],

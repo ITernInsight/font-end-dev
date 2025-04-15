@@ -1,25 +1,10 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import { RouterLink, useRoute, useRouter } from 'vue-router';
+import { ref, onMounted, computed } from 'vue';
+import { RouterLink, useRouter } from 'vue-router';
 import axios from 'axios';
-import FilterComp from '@/components/FilterComp.vue';
+import Filter from '../components/FilterComp.vue';
 
-const questions = ref<any[]>([]);
-const route = useRoute();
-const router = useRouter();
-const showModal = ref(false);
-const deleteId = ref<number | null>(null);
-const deleteTitle = ref('');
-const id = route.params.id;
-
-// ตัวแปรสำหรับ Search Bar & Date Filter
-const searchKeyword = ref('');
-const selectedPosition = ref('');
-const startDate = ref('');
-const endDate = ref('');
-const date = ref('');
-
-interface Review {
+interface Question {
   id: number;
   title: string;
   position?: string;
@@ -27,62 +12,132 @@ interface Review {
   date: Date;
   company?: string;
   userName?: string;
-  likedByUser?: boolean; 
+  likes?: any[];
+  isLikedByUser?: boolean;
+  likesCount?: number;
 }
 
-const toggleLike = async (review: Review) => {
+const questions = ref<Question[]>([]);
+const isLoading = ref(true);
+const router = useRouter();
+const searchKeyword = ref('');
+const selectedPosition = ref('');
+const startDate = ref('');
+const endDate = ref('');
+const showingMyQuestions = ref(false);
+const user = JSON.parse(localStorage.getItem('user') || 'null');
+
+const isTokenValid = () => {
+  const token = localStorage.getItem('token');
+  if (!token) return false;
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const currentTime = Math.floor(Date.now() / 1000);
+    return payload.exp > currentTime;
+  } catch {
+    return false;
+  }
+};
+
+if (!isTokenValid()) {
+  alert('Session expired. Please log in again.');
+  localStorage.removeItem('token');
+  router.push('/login');
+}
+
+const transformQuestion = (q: any) => {
+  const liked = q.like?.some((l: any) => l.user?.id === user?.id);
+  return {
+    ...q,
+    isLikedByUser: liked,
+    likesCount: q.like?.length || 0,
+    date: new Date(q.date)
+  };
+
+};
+
+const fetchAllQuestions = async () => {
   try {
     const token = localStorage.getItem('token');
-    if (!token) {
-      throw new Error('Unauthorized: No token found');
-    }
-
-    // ส่งคำขอไปยัง API
-    await axios.post(
-      `http://localhost:3000/reviews/${review.id}/like`,
-      { liked: !review.likedByUser },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-
-    // อัปเดตสถานะ liked ใน Frontend
-    review.likedByUser = !review.likedByUser;
-    console.log('Like status updated successfully');
-  } catch (error) {
-    console.error('Error toggling like status', error);
-  }
-};
-
-// โหลดข้อมูลคำถามจาก API
-const fetchQuestions = async () => {
-  try {
-    const token = localStorage.getItem('token'); // ดึง Token จาก Local Storage
-    if (!token) {
-
-      throw new Error('Unauthorized: No token found');
-    }
+    if (!token) throw new Error('Unauthorized: No token found');
 
     const response = await axios.get('http://localhost:3000/questions', {
-      headers: {
-        Authorization: `Bearer ${token}`, // ส่ง Token ใน Header
-      },
+      headers: { Authorization: `Bearer ${token}` },
     });
 
-    questions.value = response.data;
-    console.log('Questions fetched successfully:', response.data);
-  } catch (error: any) {
-    console.error('Error fetching questions:', error);
-    if (error.response && error.response.status === 401) {
-      alert('Unauthorized: Please log in again.');
-      router.push('/login'); // เปลี่ยนเส้นทางไปยังหน้า Login
-    }
+    questions.value = response.data.map(transformQuestion);
+    showingMyQuestions.value = false;
+  } catch (error) {
+    console.error('Error fetching data', error);
+  } finally {
+    isLoading.value = false;
   }
 };
 
-// ฟังก์ชันกรองข้อมูลคำถาม
+const fetchMyQuestions = async () => {
+  try {
+    isLoading.value = true;
+    const token = localStorage.getItem('token');
+    const userId = user?.id;
+    if (!token || !userId) throw new Error('Unauthorized');
+
+    const response = await axios.get(`http://localhost:3000/questions/user/${userId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    questions.value = response.data.map(transformQuestion);
+    showingMyQuestions.value = true;
+  } catch (error) {
+    console.error('Error fetching my questions:', error);
+  } finally {
+    isLoading.value = false;
+  }
+  console.log('Current user:', user);
+  console.log('User ID used to fetch:', user?.id);
+  if (!user || !user.id) {
+    alert('User ID not found. Please log in again.');
+    return;
+  }
+
+
+};
+
+const likeQuestion = async (q: Question) => {
+  const token = localStorage.getItem('token');
+  q.isLikedByUser = true;
+  q.likesCount = (q.likesCount || 0) + 1;
+  try {
+    await axios.post(`http://localhost:3000/questions/${q.id}/like`, {}, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+  } catch (e) {
+    q.isLikedByUser = false;
+    q.likesCount = (q.likesCount || 1) - 1;
+    console.error('Like failed', e);
+  }
+};
+
+const unlikeQuestion = async (q: Question) => {
+  const token = localStorage.getItem('token');
+  q.isLikedByUser = false;
+  q.likesCount = Math.max((q.likesCount || 1) - 1, 0);
+  try {
+    // Since DELETE /unlike doesn't exist, fallback to same like endpoint to toggle like
+    await axios.post(`http://localhost:3000/questions/${q.id}/like`, {}, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+  } catch (e) {
+    q.isLikedByUser = true;
+    q.likesCount = (q.likesCount || 0) + 1;
+    console.error('Unlike fallback failed', e);
+  }
+};
+
+const positions = computed(() => {
+  const uniquePositions = new Set(questions.value.map((question) => question.position).filter(Boolean));
+  return Array.from(uniquePositions) as string[];
+});
+
 const filteredQuestions = computed(() => {
   return questions.value.filter((question) => {
     const matchesSearch =
@@ -100,119 +155,63 @@ const filteredQuestions = computed(() => {
   });
 });
 
-// เรียงลำดับให้คำถามล่าสุดอยู่ด้านบน
 const sortedQuestions = computed(() => {
   return filteredQuestions.value.slice().sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 });
 
-// แสดง Modal ยืนยันการลบ
-const confirmDelete = (id: number, title: string) => {
-  deleteId.value = id;
-  deleteTitle.value = title;
-  showModal.value = true;
-};
 
-// ฟังก์ชันลบคำถาม
-const handleDelete = async () => {
-  if (deleteId.value !== null) {
-    try {
-      const token = localStorage.getItem('token'); // ดึง Token จาก Local Storage
-      if (!token) {
-        throw new Error('Unauthorized: No token found');
-      }
-
-      await axios.delete(`http://localhost:3000/questions/${deleteId.value}`, {
-        headers: {
-          Authorization: `Bearer ${token}`, // ส่ง Token ใน Header
-        },
-      });
-
-      questions.value = questions.value.filter((question) => question.id !== deleteId.value);
-      showModal.value = false;
-      deleteId.value = null;
-      deleteTitle.value = '';
-    } catch (error) {
-      console.error('Error deleting question:', error);
-    }
-  }
-};
-
-// ยกเลิกการลบ
-const cancelDelete = () => {
-  showModal.value = false;
-  deleteId.value = null;
-  deleteTitle.value = '';
-};
-
-// ฟังก์ชันจัดรูปแบบวันที่เท่านั้น
-const formatDate = (dateString: string) => {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-GB', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  });
-};
-
-// โหลดข้อมูลเมื่อ Component ถูกสร้าง
-onMounted(fetchQuestions);
-
-// State to manage dropdown visibility
-const isDropdownOpen = ref(false);
-
-
+onMounted(fetchAllQuestions);
 </script>
 
 
 <template>
-  <!-- ปุ่ม Add Question -->
-  <RouterLink :to="{ path: '/admin/add-question', query: { from: 'user' } }"
-    class="mt-2 mb-2 text-white it text-xs font-bold bg-gradient-to-b from-button px-4 py-1.5 h-fit to-button/50 shadow-md rounded-lg lg:text-sm">
-    Add question
-  </RouterLink>
+  <div class="flex justify-end gap-4 px-16 mt-4">
+    <RouterLink :to="{ path: '/admin/add-question', query: { from: 'user' } }"
+      class="bg-gradient-to-b from-button to-button/50 text-white px-4 py-2 rounded-lg shadow-md">
+      Add Question
+    </RouterLink>
 
+    <button v-if="showingMyQuestions" @click="fetchAllQuestions"
+      class="bg-gradient-to-b from-button to-button/50 text-white px-4 py-2 rounded-lg shadow-md">
+      All Questions
+    </button>
+    <button v-else @click="fetchMyQuestions"
+      class="bg-gradient-to-b from-button to-button/50 text-white px-4 py-2 rounded-lg shadow-md">
+      My Questions
+    </button>
+  </div>
 
-  <!-- 🔍 Search Bar & Date Filters -->
-  <FilterComp class="mt-2" @updateSearch="searchKeyword = $event" @updateDate="date = $event" />
+  <Filter class="mt-4" @updateSearch="searchKeyword = $event" @updatePosition="selectedPosition = $event"
+    @updateStartDate="startDate = $event" @updateEndDate="endDate = $event" :positions="positions" />
 
-
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 px-16 mt-8">
-    <div v-for="question in sortedQuestions" :key="question.id" class="border p-4 rounded-lg bg-white shadow">
-      <h2 class="text-lg font-bold truncate">{{ question.title }}</h2>
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 px-16 mt-8 mb-8">
+    <div v-for="question in sortedQuestions" :key="question.id"
+      class="border border-border p-4 rounded-lg bg-white shadow">
+      <h2 class="text-lg font-bold text-hightlight truncate">{{ question.title }}</h2>
       <p class="text-sm mt-2 text-gray-700 line-clamp-2">{{ question.description.substring(0, 60) }}...</p>
-      <small class="text-xs text-gray-400">{{ formatDate(question.date) }}</small>
+      <small class="text-xs text-gray-400">{{ new Date(question.date).toLocaleDateString('en-GB') }}</small>
       <div class="flex justify-between items-center mt-3">
-        <router-link :to="{ path: `/questions/${question.id}` }"
-          class="bg-gradient-to-b from-button to-button/55 text-white py-1 px-3 rounded">
+        <RouterLink :to="`/questions/${question.id}`"
+          class="text-xs font-medium text-white bg-gradient-to-b from-button to-button/40 px-4 py-1 rounded-lg border-border border shadow-sm md:text-sm lg:text-base">
           Read more
-        </router-link>
-        <!-- Like Button -->
- <!-- Like Button -->
- <button @click="toggleLike(question)" class="text-xl transition duration-200 focus:outline-none">
-  <i
-    :class="[ 
-      'fas', 
-      'fa-heart', 
-      question.likedByUser ? 'text-red-500' : 'text-gray-400' 
-    ]"
-  ></i>
-</button>
+        </RouterLink>
+        <button @click="question.isLikedByUser ? unlikeQuestion(question) : likeQuestion(question)">
+          <i :class="['fas', question.isLikedByUser ? 'fa-heart text-red-500' : 'fa-heart text-gray-400']"></i>
+          <span class="ml-1 text-sm">{{ question.likesCount }}</span>
+        </button>
       </div>
     </div>
   </div>
 
-
-  <!-- Modal for delete confirmation -->
-  <div v-if="showModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 z-50">
-    <div class="bg-white p-6 rounded-lg w-96 shadow-lg">
-      <h3 class="text-lg font-bold mb-6 text-center">
-        ⚠️ Are you sure you want to delete this post
-        <span class="text-red-600">[ {{ deleteTitle }} ]</span>?
-      </h3>
-      <div class="flex justify-center gap-6">
-        <button @click="handleDelete" class="bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700">Confirm</button>
-        <button @click="cancelDelete" class="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600">Cancel</button>
-      </div>
-    </div>
+  <div v-if="sortedQuestions.length === 0 && !isLoading" class="flex flex-col items-center justify-center py-12">
+    <p class="text-gray-500 font-medium">No questions found</p>
   </div>
+
+  <div v-if="isLoading" class="flex justify-center py-12">
+    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-highlight"></div>
+  </div>
+
+
 </template>
+
+<style scoped></style>

@@ -18,12 +18,14 @@ const checkLoginStatus = () => {
 }
 
 onMounted(() => {
-  checkLoginStatus() // ตรวจสอบสถานะการล็อกอินเมื่อโหลดหน้า
+  checkLoginStatus() 
   window.addEventListener('user-logged-in', checkLoginStatus)
+  window.addEventListener('user-logged-out', checkLoginStatus)
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('user-logged-in', checkLoginStatus)
+  
 })
 
 // ตรวจสอบการเปลี่ยนเส้นทาง

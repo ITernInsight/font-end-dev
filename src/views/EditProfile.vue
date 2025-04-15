@@ -1,13 +1,18 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
+import axios from 'axios'
+import { useRouter } from 'vue-router'
 
 interface UserData {
+  id?: number
   name: string
   email: string
   phone: string
   position: string
   photoUrl: string
 }
+
+const router = useRouter()
 
 const defaultUserData: UserData = {
   name: '',
@@ -18,17 +23,7 @@ const defaultUserData: UserData = {
 }
 
 const user = ref<UserData>({ ...defaultUserData })
-const originalUser = ref<UserData>({ ...defaultUserData }) // 🟢 เก็บค่าก่อนแก้
-
-// แก้ไขประเภทให้กับ `editing` และเพิ่ม `photoUrl`
-const editing = ref<{ [key in keyof UserData]: boolean }>({
-  name: false,
-  email: false,
-  phone: false,
-  position: false,
-  photoUrl: false // เพิ่ม `photoUrl` เข้าไป
-})
-
+const originalUser = ref<UserData>({ ...defaultUserData })
 const fileInput = ref<HTMLInputElement | null>(null)
 
 onMounted(() => {
@@ -40,39 +35,63 @@ onMounted(() => {
   }
 })
 
-const toggleEdit = (field: keyof UserData) => { // เปลี่ยนเป็น keyof UserData
-  originalUser.value = { ...user.value } // 🟢 บันทึกก่อนแก้
-  editing.value[field] = true
-}
+const hasChanges = computed(() => {
+  return JSON.stringify(user.value) !== JSON.stringify(originalUser.value)
+})
 
-const saveEdit = (field: keyof UserData) => { // เปลี่ยนเป็น keyof UserData
-  editing.value[field] = false
-  localStorage.setItem('user', JSON.stringify(user.value))
-  window.dispatchEvent(new Event('user-logged-in'))
-}
+const saveAll = async () => {
+  try {
+    const token = localStorage.getItem('token')
+    const id = user.value.id
+    if (!token || !id) throw new Error('No token or user ID found.')
 
-const cancelEdit = (field: keyof UserData) => { // เปลี่ยนเป็น keyof UserData
-  user.value[field] = originalUser.value[field]
-  editing.value[field] = false
+    await axios.put(`http://localhost:3000/users/${id}`, user.value, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+
+    originalUser.value = { ...user.value }
+    localStorage.setItem('user', JSON.stringify(user.value))
+    window.dispatchEvent(new Event('user-logged-in'))
+  } catch (err: any) {
+    const message = err.response?.data?.message || err.message
+    if (message.includes('entity too large')) {
+      showModalError('The file size exceeds the 2MB limit. Please select a smaller file.')
+    } else {
+      showModalError('Error: ' + message)
+    }
+  }
 }
 
 const handlePhotoChange = (event: Event) => {
   const file = (event.target as HTMLInputElement).files?.[0]
   if (file) {
-    const maxSize = 2 * 1024 * 1024 // ขนาดสูงสุด 2MB
+    const maxSize = 2 * 1024 * 1024
+    const allowedTypes = ['image/png', 'image/jpeg']
+
+    if (!allowedTypes.includes(file.type)) {
+      showModalError('Only PNG and JPG image files are allowed.')
+      return
+    }
+
     if (file.size > maxSize) {
-      alert('The file size exceeds the 2MB limit. Please select a smaller file.')
+      showModalError('The file size exceeds the 2MB limit. Please select a smaller file.')
       return
     }
 
     const reader = new FileReader()
     reader.onload = () => {
       user.value.photoUrl = reader.result as string
-      localStorage.setItem('user', JSON.stringify(user.value))
-      window.dispatchEvent(new Event('user-logged-in'))
     }
     reader.readAsDataURL(file)
   }
+}
+
+const showErrorModal = ref(false)
+const errorMessage = ref('')
+
+const showModalError = (msg: string) => {
+  errorMessage.value = msg
+  showErrorModal.value = true
 }
 </script>
 
@@ -99,44 +118,62 @@ const handlePhotoChange = (event: Event) => {
 
       <!-- ข้อมูลโปรไฟล์ -->
       <div class="space-y-4">
-        <!-- Field Template -->
         <div
           v-for="field in ['name', 'email', 'phone', 'position']"
           :key="field"
           class="flex justify-between items-center border-b pb-2"
         >
           <span class="font-medium text-gray-700 capitalize">{{ field }}</span>
-          <div class="flex items-center">
+          <div class="flex items-center w-2/3">
             <input
-              v-if="editing[field as keyof UserData]"
               v-model="user[field as keyof UserData]"
               :type="field === 'phone' ? 'tel' : 'text'"
               :maxlength="field === 'phone' ? 10 : undefined"
-              @input="field === 'phone' ? (user.phone = user.phone.replace(/\\D/g, '').slice(0, 10)) : null"
-              class="border-b border-gray-300 text-right focus:outline-none focus:border-[#00465e]"
+              @input="field === 'phone' ? (user.phone = user.phone.replace(/\D/g, '').slice(0, 10)) : null"
+              class="w-full text-right focus:outline-none"
             />
-            <span v-else-if="field !== 'email'">{{ user[field as keyof UserData] }}</span>
-            <a v-else :href="`mailto:${user.email}`" class="text-[#00465e]">{{ user.email }}</a>
-
-            <button v-if="!editing[field as keyof UserData]" @click="toggleEdit(field as keyof UserData)" class="ml-2 edit-btn">✏️</button>
-
-            <div v-else class="ml-2 flex space-x-2">
-              <button @click="saveEdit(field as keyof UserData)" class="text-green-500 hover:text-green-700">✅</button>
-              <button @click="cancelEdit(field as keyof UserData)" class="text-red-500 hover:text-red-700">❌</button>
-            </div>
           </div>
         </div>
+      </div>
+
+      <!-- ปุ่ม Save / Cancel -->
+      <div class="mt-6 text-center flex justify-center gap-4">
+        <button
+          @click="saveAll"
+          :disabled="!hasChanges"
+          :class="[
+            'px-6 py-2 rounded text-white transition',
+            hasChanges ? 'bg-[#00465e] hover:bg-[#00384c] cursor-pointer' : 'bg-gray-400 cursor-not-allowed'
+          ]"
+        >
+          Save
+        </button>
+        <button
+          @click="$router.push('/posts')"
+          class="px-6 py-2 rounded text-white bg-red-500 hover:bg-red-600"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Error -->
+  <div v-if="showErrorModal" class="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center">
+    <div class="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full">
+      <h2 class="text-lg font-semibold text-red-600 mb-4">Error</h2>
+      <p class="text-sm text-gray-700 mb-6">{{ errorMessage }}</p>
+      <div class="text-right">
+        <button
+          @click="showErrorModal = false"
+          class="px-4 py-2 bg-[#00465e] text-white rounded hover:bg-[#00384c]"
+        >
+          Close
+        </button>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.edit-btn {
-  color: #00465e;
-  transition: color 0.2s ease;
-}
-.edit-btn:hover {
-  color: #00384c;
-}
 </style>

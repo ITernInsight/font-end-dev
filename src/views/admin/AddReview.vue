@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import axios from 'axios';
-import { useRouter,useRoute } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 
-const adminId = 1; 
 const title = ref('');
 const description = ref('');
 const date = ref('');
@@ -13,7 +12,6 @@ const route = useRoute();
 const errorMessages = ref<string[]>([]);
 const showError = ref(false);
 
-// Set the minimum date to today
 const today = new Date();
 const minDate = today.toISOString().split('T')[0];
 date.value = minDate;
@@ -43,35 +41,34 @@ const handleInput = (event: Event) => {
 };
 
 const validateForm = () => {
-  errorMessages.value = []
+  errorMessages.value = [];
   if (containsProfanity(title.value)) {
-    errorMessages.value.push('Title contains inappropriate language.')
+    errorMessages.value.push('Title contains inappropriate language.');
   }
   if (containsProfanity(description.value)) {
-    errorMessages.value.push('Description contains inappropriate language.')
+    errorMessages.value.push('Description contains inappropriate language.');
   }
   if (!title.value.trim()) {
-    errorMessages.value.push('Title should not be empty.')
+    errorMessages.value.push('Title should not be empty.');
   }
   if (!description.value.trim()) {
-    errorMessages.value.push('Description should not be empty.')
+    errorMessages.value.push('Description should not be empty.');
   }
   if (errorMessages.value.length > 0) {
-    showError.value = true
-    return false
+    showError.value = true;
+    return false;
   }
-  return true
-}
-
+  return true;
+};
 
 const redirectBack = () => {
-  const from = route.query.from
+  const from = route.query.from;
   if (from === 'admin') {
-    router.push('/admin/review')
+    router.push('/admin/review');
   } else {
-    router.push('/reviews')
+    router.push('/reviews');
   }
-}
+};
 
 const addReview = async () => {
   try {
@@ -80,47 +77,47 @@ const addReview = async () => {
       throw new Error('Unauthorized: No token found');
     }
 
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const userId = user?.id;
+    if (!userId) {
+      throw new Error('Invalid user data');
+    }
+
     const response = await axios.post(
       'http://localhost:3000/reviews',
       {
-        userId:adminId,
+        userId,
         title: title.value,
         description: description.value,
         date: date.value,
-        adminId,
       },
       {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       }
-    )
+    );
 
-      redirectBack()
-    console.log('Reviews added successfully:', response.data)
+    redirectBack();
+    console.log('Reviews added successfully:', response.data);
   } catch (error: any) {
     if (error.response?.data?.message) {
-      const messages = error.response.data.message
-      errorMessages.value = Array.isArray(messages) ? messages : [messages]
-      showError.value = true
+      const messages = error.response.data.message;
+      errorMessages.value = Array.isArray(messages) ? messages : [messages];
+      showError.value = true;
     } else {
-      console.error('Error adding review:', error)
+      console.error('Error adding review:', error);
     }
   }
-}
-  
-
+};
 
 const submitForm = () => {
-  if (validateForm()) addReview()
-}
-
+  if (validateForm()) addReview();
+};
 
 const closeErrorPopup = () => {
   showError.value = false;
 };
-
-
 </script>
 
 <template>

@@ -24,6 +24,7 @@ const logout = () => {
   isLoggedIn.value = false;
   window.dispatchEvent(new Event('user-logged-out'));
   router.push('/posts');
+  
 };
 
 

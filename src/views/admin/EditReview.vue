@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
 import type { da } from 'vuetify/locale';
@@ -17,6 +17,18 @@ const isSubmitting = ref(false);
 const errorMessages = ref<string[]>([]);
 const showError = ref(false);
 
+// เพิ่มตัวแปรเก็บค่าต้นฉบับ
+const originalTitle = ref('');
+const originalDescription = ref('');
+const originalDate = ref('');
+
+// คำนวณว่าเปลี่ยนแปลงแล้วหรือยัง
+const isEdited = computed(() =>
+  title.value !== originalTitle.value ||
+  description.value !== originalDescription.value ||
+  date.value !== originalDate.value
+);
+
 onMounted(async () => {
   id.value = Number(route.params.id);
   from.value = (route.query.from as string) || 'user';
@@ -28,7 +40,6 @@ const fetchReview = async () => {
     const token = localStorage.getItem('token');
     if (!token) {
       console.error('Missing token');
-      alert('Session expired');
       return;
     }
 
@@ -40,6 +51,11 @@ const fetchReview = async () => {
     title.value = review.title || '';
     description.value = review.description || '';
     date.value = review.date?.split('T')[0] || new Date().toISOString().split('T')[0];
+
+    // เก็บค่าต้นฉบับ
+    originalTitle.value = title.value;
+    originalDescription.value = description.value;
+    originalDate.value = date.value;
   } catch (error) {
     console.error('Error fetching review:', error);
   } finally {
@@ -49,10 +65,7 @@ const fetchReview = async () => {
 
 const handleSubmit = async () => {
   const token = localStorage.getItem('token');
-  if (!token) {
-    alert('Session expired');
-    return;
-  }
+  if (!token) return;
 
   let userId = '';
   try {
@@ -62,10 +75,10 @@ const handleSubmit = async () => {
     console.error('Invalid token format');
   }
 
-  if (!userId) {
-    console.error('Missing token or userId');
-    return;
-  }
+  if (!userId) return;
+
+  // ไม่ทำอะไรถ้ายังไม่เปลี่ยนแปลง
+  if (!isEdited.value) return;
 
   try {
     isSubmitting.value = true;
@@ -103,12 +116,6 @@ const closeErrorPopup = () => {
 };
 </script>
 
-
-
-
-
-
-
 <template>
   <div class="max-w-4xl mx-auto p-4 font-Prompt">
     <h1 class="text-center text-2xl font-bold mb-6 text-hightlight">Edit Review</h1>
@@ -143,8 +150,13 @@ const closeErrorPopup = () => {
         </button>
         <button
           type="submit"
-          :disabled="isSubmitting"
-          class="text-white text-xs font-bold bg-gradient-to-b from-button px-4 py-1.5 h-fit to-button/55 shadow-md rounded-lg lg:text-sm"
+          :disabled="!isEdited || isSubmitting"
+          :class="[
+            'text-white text-xs font-bold px-4 py-1.5 h-fit shadow-md rounded-lg lg:text-sm',
+            isEdited && !isSubmitting
+              ? 'bg-gradient-to-b from-button to-button/55'
+              : 'bg-gray-400 cursor-not-allowed'
+          ]"
         >
           Submit
         </button>

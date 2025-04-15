@@ -3,7 +3,6 @@ import { ref } from 'vue'
 import axios from 'axios'
 import { useRouter, useRoute } from 'vue-router'
 
-const adminId = 1
 const title = ref('')
 const description = ref('')
 const date = ref('')
@@ -74,14 +73,20 @@ const redirectBack = () => {
 const addQuestion = async () => {
   try {
     const token = localStorage.getItem('token')
-    if (!token) throw new Error('Unauthorized: No token found')
+    if (!token){ throw new Error('Unauthorized: No token found');
+  }
 
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const userId = user?.id;
+    if (!userId) {
+      throw new Error('Invalid user data');
+    }
     const response = await axios.post(
       'http://localhost:3000/questions',
       {
+        userId,
         title: title.value,
         description: description.value,
-        userId: adminId,
         date: date.value,
       },
       {
