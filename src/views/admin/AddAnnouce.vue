@@ -1,206 +1,151 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import axios from 'axios'
 import { useRouter } from 'vue-router'
+import axios, { AxiosError } from 'axios';
+
 
 interface Company {
   id: number
   companyName: string
 }
 
-// Admin ID (you can adjust this as needed)
-const adminId = 1 // Replace with actual admin ID
-
-// Ref to bind form data
+const adminId = 1
 const companies = ref<Company[]>([])
-const isLoading = ref(true) // loading state
+const isLoading = ref(true)
 const title = ref('')
 const subtitle = ref('')
 const description = ref('')
-const position = ref<string[]>([]) // Adjusted type to string[]
-const startDate = ref(new Date()) // Corrected initialization of startDate
+const position = ref<string[]>([])
+const startDate = ref('')
 const email = ref('')
 const tel = ref('')
-const endDate = ref(new Date()) // Corrected initialization of endDate
+const endDate = ref('')
 const companyId = ref(1)
 const router = useRouter()
 
-// รายการตำแหน่งงานที่สามารถเลือกได้
 const positions = [
-  'Software Developer',
-  'Web Designer',
-  'Project Manager',
-  'QA Tester',
-  'Backend Developer',
-  'UX/UI Designer',
-  'Business Analyst',
-  'Full Stack Developer',
-  'Marketing Specialist',
-  'Data Science',
-  'Devops Developer',
-  'Data Analyst',
-]
+  'Software Developer','Web Designer','Project Manager','QA Tester','Backend Developer',
+  'UX/UI Designer','Business Analyst','Full Stack Developer','Marketing Specialist',
+  'Data Science','Devops Developer','Data Analyst']
 
-// Variables to manage dropdown functionality
 const isDropdownOpen = ref(false)
-
-// Function to toggle dropdown visibility
-const toggleDropdown = () => {
-  isDropdownOpen.value = !isDropdownOpen.value
-}
+const toggleDropdown = () => isDropdownOpen.value = !isDropdownOpen.value
 const errorMessages = ref<string[]>([])
 const showError = ref(false)
-
 const profanityPattern = /(อี)?(เหี้ย|ดอก|ห่า|สัส|เวร|ควาย|สัด|ควย)/gi
 
-const removeRepeatedCharacters = (text: string) => {
-  return text.replace(/([ก-๙])\1+/g, '$1')
-}
-
-const containsProfanity = (text: string) => {
-  const cleanedText = removeRepeatedCharacters(text)
-  return profanityPattern.test(cleanedText)
-}
+const removeRepeatedCharacters = (text: string) => text.replace(/([ก-๙])\1+/g, '$1')
+const containsProfanity = (text: string) => profanityPattern.test(removeRepeatedCharacters(text))
 
 const handleInput = (event: Event) => {
   const input = event.target as HTMLInputElement | HTMLTextAreaElement
-  const cleanedText = removeRepeatedCharacters(input.value)
-  if (containsProfanity(cleanedText)) {
-    input.value = cleanedText.replace(profanityPattern, "")
-    input.setCustomValidity("กรุณาใช้คำที่สุภาพ")
-    input.reportValidity()
-  } else {
-    input.setCustomValidity("")
-    input.reportValidity()
-  }
+  input.value = input.value.trimStart()
+  const cleaned = removeRepeatedCharacters(input.value)
+  if (containsProfanity(cleaned)) {
+    input.value = cleaned.replace(profanityPattern, '')
+    input.setCustomValidity('กรุณาใช้คำที่สุภาพ')
+  } else input.setCustomValidity('')
+  input.reportValidity()
 }
+
+const isFormValid = computed(() => {
+  const isNotEmpty = (v: string) => v.trim() !== ''
+  return (
+    isNotEmpty(title.value) &&
+    isNotEmpty(description.value) &&
+    isNotEmpty(email.value) &&
+    isNotEmpty(tel.value) &&
+    isNotEmpty(startDate.value) &&
+    isNotEmpty(endDate.value) &&
+    position.value.length > 0 &&
+    isNotEmpty(search.value)
+  )
+})
 
 const validateForm = () => {
   errorMessages.value = []
-  if (containsProfanity(title.value)) {
-    errorMessages.value.push('Title contains inappropriate language.')
-  }
-  if (containsProfanity(description.value)) {
-    errorMessages.value.push('Description contains inappropriate language.')
-  }
-  if (errorMessages.value.length > 0) {
-    showError.value = true
-    return false
-  }
-  return true
+  if (containsProfanity(title.value)) errorMessages.value.push('Title contains inappropriate language.')
+  if (containsProfanity(description.value)) errorMessages.value.push('Description contains inappropriate language.')
+  showError.value = errorMessages.value.length > 0
+  return errorMessages.value.length === 0
 }
 
-// Function to handle form submission
 const addAnnouncement = async () => {
   try {
-    const token = localStorage.getItem('token'); // ดึง JWT Token จาก Local Storage
-    if (!token) {
-      throw new Error('Unauthorized: No token found');
-    }
+    const token = localStorage.getItem('token')
+    if (!token) throw new Error('Unauthorized')
 
     const response = await axios.post(
       'http://localhost:3000/posts',
       {
-        title: title.value,
-        subtitle: subtitle.value,
-        description: description.value,
+        title: title.value.trim(),
+        subtitle: subtitle.value.trim(),
+        description: description.value.trim(),
         position: position.value,
-        email: email.value,
-        tel: tel.value,
-        startDate: startDate.value,
-        endDate: endDate.value,
+        email: email.value.trim(),
+        tel: tel.value.trim(),
+        startDate: new Date(startDate.value),
+        endDate: new Date(endDate.value),
+        image: '',
         adminId,
         companyId: companyId.value,
       },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`, // เพิ่ม JWT Token ใน Header
-        },
-      }
-    );
+      { headers: { Authorization: `Bearer ${token}` } }
+    )
 
-    router.push('/admin/annouce');
-    console.log('Announcement added successfully:', response.data);
+    if (response.data.success) router.push('/admin/annouce')
+    else alert('เพิ่มประกาศไม่สำเร็จ:\n' + JSON.stringify(response.data.message))
   } catch (error: unknown) {
-    if (error instanceof Error) {
-      // ตอนนี้คุณสามารถเข้าถึง error.message ได้อย่างปลอดภัย
-      console.error('Error adding announcement:', error.message);
-    } else {
-      // หาก error ไม่ใช่ instance ของ Error ให้แสดงข้อความที่เป็นประเภท unknown
-      console.error('Unknown error:', error);
-    }
-  }
-};
-
-
-const submitForm = () => {
-  if (validateForm()) {
-    addAnnouncement()
+  if (error instanceof AxiosError) {
+    // ในกรณีที่ error เป็น AxiosError
+    alert('เกิดข้อผิดพลาด: ' + (error.response?.data?.message || error.message));
+  } else if (error instanceof Error) {
+    // ในกรณีที่ error เป็น Error ปกติ
+    alert('เกิดข้อผิดพลาด: ' + error.message);
+  } else {
+    // ในกรณีที่ error ไม่สามารถตรวจสอบได้
+    alert('เกิดข้อผิดพลาด: ' + String(error));
   }
 }
+}
+
+const submitForm = () => { if (validateForm()) addAnnouncement() }
 
 const fetchData = async () => {
   try {
     const response = await axios.get<Company[]>('http://localhost:3000/companies')
-    companies.value = response.data.map((company) => ({
-      id: company.id,
-      companyName: company.companyName,
-    }))
+    companies.value = response.data.map(c => ({ id: c.id, companyName: c.companyName }))
   } catch (error) {
     console.error('Error fetching data', error)
   } finally {
     isLoading.value = false
   }
 }
-
 onMounted(fetchData)
 
 const search = ref('')
 const isOpen = ref(false)
-const searchResult = computed(() => {
-  if (search.value === '') {
-    return []
-  }
-  const filteredCompanies = companies.value.filter((item) =>
-    item.companyName.toLowerCase().includes(search.value.toLowerCase()),
-  )
-
-  return filteredCompanies
-})
-
+const searchResult = computed(() => search.value === '' ? [] : companies.value.filter(c => c.companyName.toLowerCase().includes(search.value.toLowerCase())))
 const setSelectedId = (id: number, item: string) => {
   isOpen.value = false
   companyId.value = id
   search.value = item
 }
-
 const handleCompanyInput = (event: Event) => {
   isOpen.value = true
-  search.value = (event.target as HTMLInputElement).value
+  search.value = (event.target as HTMLInputElement).value.trimStart()
 }
-
 const formatPhone = (event: Event) => {
-  let value = (event.target as HTMLInputElement).value
-  value = value.replace(/\D/g, '') // Remove non-digit characters
-  if (value.length > 3 && value.length <= 6) {
-    value = `${value.slice(0, 3)}-${value.slice(3)}`
-  } else if (value.length > 6) {
-    value = `${value.slice(0, 3)}-${value.slice(3, 6)}-${value.slice(6, 10)}`
-  }
-  ; (event.target as HTMLInputElement).value = value
+  let value = (event.target as HTMLInputElement).value.replace(/\D/g, '')
+  if (value.length > 3 && value.length <= 6) value = `${value.slice(0, 3)}-${value.slice(3)}`
+  else if (value.length > 6) value = `${value.slice(0, 3)}-${value.slice(3, 6)}-${value.slice(6, 10)}`
+  ;(event.target as HTMLInputElement).value = value
 }
-
-const closeErrorPopup = () => {
-  showError.value = false
-}
-
-// Function to log selected dates
+const closeErrorPopup = () => showError.value = false
 const logDates = () => {
-  console.log('Start Date:', startDate.value);
-  console.log('End Date:', endDate.value);
+  console.log('Start Date:', startDate.value)
+  console.log('End Date:', endDate.value)
 }
-
-
 </script>
 
 <template>
@@ -275,21 +220,34 @@ const logDates = () => {
         <div class="mb-4 flex flex-col w-full">
           <label>End Date <span class="text-red-500">*</span></label>
           <input type="date" v-model="endDate" class="mt-1 border rounded-lg px-3 py-2"
-            :min="startDate.toISOString().split('T')[0]" @change="logDates" required />
+          :min="startDate"
+          @change="logDates" required />
         </div>
       </div>
 
-      <div class="flex justify-center space-x-4 mt-4">
-        <RouterLink to="/admin/annouce" type="button"
-          class="text-white text-xs font-bold bg-gradient-to-b from-button px-4 py-1.5 h-fit to-button/55 shadow-md rounded-lg lg:text-sm">
-          Cancel
-        </RouterLink>
-        <button type="submit"
-          class="text-white text-xs font-bold bg-gradient-to-b from-button px-4 py-1.5 h-fit to-button/55 shadow-md rounded-lg lg:text-sm">
-          Submit
-        </button>
-      </div>
-    </form>
+      <!-- <form @submit.prevent="submitForm"> -->
+    <!-- ปุ่ม Submit -->
+    <div class="flex justify-center space-x-4 mt-4">
+      <RouterLink
+        to="/admin/annouce"
+        type="button"
+        class="text-white text-xs font-bold bg-gradient-to-b from-button px-4 py-1.5 h-fit to-button/55 shadow-md rounded-lg lg:text-sm"
+      >
+        Cancel
+      </RouterLink>
+      <button
+        type="submit"
+        :disabled="!isFormValid"
+        :class="[
+          'text-white text-xs font-bold px-4 py-1.5 h-fit rounded-lg lg:text-sm',
+          isFormValid ? 'bg-gradient-to-b from-button to-button/55 shadow-md' : 'bg-gray-400 cursor-not-allowed'
+        ]"
+      >
+        Submit
+      </button>
+    </div>
+  </form>
+    <!-- </form> -->
   </div>
 
   <div v-if="showError && errorMessages.length > 0"
