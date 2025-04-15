@@ -140,8 +140,11 @@ const handleDeleteReview = async () => {
   showModal.value = false;
 
 
- if (user.role === 'admin') router.push('/admin/review');
-  else router.push('/reviews');
+ if (user.value.role === 'admin') {
+  router.push('/admin/review'); // หรือ '/admin/question'
+} else {
+  router.push('/reviews'); // หรือ '/questions'
+}
 };
 
 // Cancel delete review
