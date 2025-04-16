@@ -27,7 +27,7 @@ const registerUser = async () => {
 
     console.log('🔁 Sending register payload:', payload)
 
-    await axios.post('http://localhost:3000/register', payload)
+    await axios.post('/api/register', payload)
 
     // ✅ Success -> redirect
     router.push('/login')

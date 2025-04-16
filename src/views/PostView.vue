@@ -30,7 +30,7 @@ const endDateSelected = ref('') // end date filter
 
 const fetchData = async () => {
   try {
-    const response = await axios.get<Post[]>('http://localhost:3000/posts')
+    const response = await axios.get<Post[]>('/api/posts')
     // Flatten the data by extracting the companyName
     posts.value = response.data.map((post) => ({
       id: post.id,
@@ -90,7 +90,7 @@ const positions = computed(() => {
   <Filter
     class="my-2"
     @updateSearch="searchKeyword = $event"
-    @updatePosition="selectedPosition = $event" 
+    @updatePosition="selectedPosition = $event"
     @updateStartDate="startDateSelected = $event"
     @updateEndDate="endDateSelected = $event"
     :positions="positions"

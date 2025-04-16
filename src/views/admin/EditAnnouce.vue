@@ -93,7 +93,7 @@ const EditAnnoucement = async () => {
     }
 
     const response = await axios.put(
-      `http://localhost:3000/posts/${postId}`,
+      `/api/posts/${postId}`,
       {
         title: title.value,
         description: description.value,
@@ -157,7 +157,7 @@ const fetchPostDetail = async () => {
       throw new Error('Unauthorized: No token found');
     }
 
-    const response = await axios.get(`http://localhost:3000/posts/${postId}`, {
+    const response = await axios.get(`/api/posts/${postId}`, {
       headers: {
         Authorization: `Bearer ${token}`, // เพิ่ม JWT Token ใน Header
       },
@@ -209,7 +209,7 @@ const fetchPostDetail = async () => {
 
 const fetchCompany = async () => {
   try {
-    const response = await axios.get<Company[]>('http://localhost:3000/companies')
+    const response = await axios.get<Company[]>('/api/companies')
     companies.value = response.data
   } catch (error) {
     console.error('Error fetching companies:', error)

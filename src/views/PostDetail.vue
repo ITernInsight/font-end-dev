@@ -29,7 +29,7 @@ const postId = route.params.id
 
 const fetchData = async () => {
   try {
-    const response = await axios.get(`http://localhost:3000/posts/${postId}`);
+    const response = await axios.get(`/api/posts/${postId}`);
     // Extract relevant data directly from the single object response
     const postData = response.data;
     post.value = {
@@ -59,7 +59,7 @@ const formatDate = (date: Date | null): string => {
   if (date === null) {
     return ""; // Fallback value for null dates
   }
-  
+
   const options: Intl.DateTimeFormatOptions = {
     year: 'numeric',
     month: 'short',
