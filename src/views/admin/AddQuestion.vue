@@ -82,7 +82,7 @@ const addQuestion = async () => {
       throw new Error('Invalid user data');
     }
     const response = await axios.post(
-      '/api/questions',
+      'http://localhost:3000/questions',
       {
         userId,
         title: title.value,

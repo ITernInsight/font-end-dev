@@ -65,7 +65,7 @@ if (storedUser) {
 const fetchQuestion = async () => {
   const token = localStorage.getItem('token')
   if (token) {
-    const response = await axios.get(`/api/questions/${id.value}`, {
+    const response = await axios.get(`http://localhost:3000/questions/${id.value}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
     question.value = response.data
@@ -75,7 +75,7 @@ const fetchQuestion = async () => {
 // Fetch comments data
 const fetchComments = async () => {
   try {
-    const res = await axios.get(`/api/questions/${id.value}/comment`)
+    const res = await axios.get(`http://localhost:3000/questions/${id.value}/comment`)
     comments.value = Array.isArray(res.data.comments) ? res.data.comments.reverse() : []
   } catch (err) {
     console.error('Error fetching comments:', err)
@@ -93,7 +93,7 @@ const submitComment = async () => {
   if (token) {
     const now = new Date()
 
-    const res = await axios.post(`/api/questions/${id.value}/comment`, {
+    const res = await axios.post(`http://localhost:3000/questions/${id.value}/comment`, {
       text: commentText.value,
       date: now,
       user: user.value.id,
@@ -125,7 +125,7 @@ const cancelEditComment = () => {
 const saveCommentEdit = async () => {
   const token = localStorage.getItem('token')
   if (token && editCommentId.value !== null) {
-    await axios.put(`/api/questions/${id.value}/comment/${editCommentId.value}`, {
+    await axios.put(`http://localhost:3000/questions/${id.value}/comment/${editCommentId.value}`, {
       text: editText.value,
     }, {
       headers: { Authorization: `Bearer ${token}` },
@@ -150,7 +150,7 @@ const confirmDeleteComment = (id: number) => {
 const deleteComment = async () => {
   const token = localStorage.getItem('token')
   if (token && deleteCommentId.value !== null) {
-    await axios.delete(`/api/questions/${id.value}/comment/${deleteCommentId.value}`, {
+    await axios.delete(`http://localhost:3000/questions/${id.value}/comment/${deleteCommentId.value}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
     showCommentDelete.value = false
@@ -175,7 +175,7 @@ const handleDeleteQuestion = async () => {
   if (user.value?.id) {
     const token = localStorage.getItem('token')
     if (token && deleteId.value !== null) {
-      await axios.delete(`/api/questions/${deleteId.value}`, {
+      await axios.delete(`http://localhost:3000/questions/${deleteId.value}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       showModal.value = false

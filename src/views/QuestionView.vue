@@ -61,7 +61,7 @@ const fetchAllQuestions = async () => {
     const token = localStorage.getItem('token');
     if (!token) throw new Error('Unauthorized: No token found');
 
-    const response = await axios.get('/api/questions', {
+    const response = await axios.get('http://localhost:3000/questions', {
       headers: { Authorization: `Bearer ${token}` },
     });
 
@@ -81,7 +81,7 @@ const fetchMyQuestions = async () => {
     const userId = user?.id;
     if (!token || !userId) throw new Error('Unauthorized');
 
-    const response = await axios.get(`/api/questions/user/${userId}`, {
+    const response = await axios.get(`http://localhost:3000/questions/user/${userId}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
 
@@ -107,7 +107,7 @@ const likeQuestion = async (q: Question) => {
   q.isLikedByUser = true;
   q.likesCount = (q.likesCount || 0) + 1;
   try {
-    await axios.post(`/api/questions/${q.id}/like`, {}, {
+    await axios.post(`http://localhost:3000/questions/${q.id}/like`, {}, {
       headers: { Authorization: `Bearer ${token}` }
     });
   } catch (e) {
@@ -123,7 +123,7 @@ const unlikeQuestion = async (q: Question) => {
   q.likesCount = Math.max((q.likesCount || 1) - 1, 0);
   try {
     // Since DELETE /unlike doesn't exist, fallback to same like endpoint to toggle like
-    await axios.post(`/api/questions/${q.id}/like`, {}, {
+    await axios.post(`http://localhost:3000/questions/${q.id}/like`, {}, {
       headers: { Authorization: `Bearer ${token}` }
     });
   } catch (e) {

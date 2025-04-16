@@ -55,7 +55,7 @@ if (storedUser) {
 const fetchReview = async () => {
   const token = localStorage.getItem('token');
   try {
-    const response = await axios.get(`/api/reviews/${id}`, {
+    const response = await axios.get(`http://localhost:3000/reviews/${id}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     review.value = response.data;
@@ -69,7 +69,7 @@ const fetchReview = async () => {
 // Fetch comments data
 const fetchComments = async () => {
   try {
-    const res = await axios.get(`/api/reviews/${id}/comment`);
+    const res = await axios.get(`http://localhost:3000/reviews/${id}/comment`);
     comments.value = Array.isArray(res.data.comments) ? res.data.comments.reverse() : [];
   } catch (err) {
     console.error('Error fetching comments:', err);
@@ -89,7 +89,7 @@ const submitComment = async () => {
   const now = new Date();
 
   try {
-    const res = await axios.post(`/api/reviews/${id}/comment`, {
+    const res = await axios.post(`http://localhost:3000/reviews/${id}/comment`, {
       text: commentText.value,
       date: now,
       user: user.value.id,
@@ -123,7 +123,7 @@ const cancelEditComment = () => {
 const saveCommentEdit = async () => {
   const token = localStorage.getItem('token');
   try {
-    await axios.put(`/api/reviews/${id}/comment/${editCommentId.value}`, {
+    await axios.put(`http://localhost:3000/reviews/${id}/comment/${editCommentId.value}`, {
       text: editText.value,
     }, {
       headers: { Authorization: `Bearer ${token}` },
@@ -145,7 +145,7 @@ const confirmDeleteComment = (id: number) => {
 const deleteComment = async () => {
   const token = localStorage.getItem('token');
   try {
-    await axios.delete(`/api/reviews/${id}/comment/${deleteCommentId.value}`, {
+    await axios.delete(`http://localhost:3000/reviews/${id}/comment/${deleteCommentId.value}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     showCommentDelete.value = false;
@@ -171,7 +171,7 @@ const confirmDelete = (id: number, title: string) => {
 const handleDeleteReview = async () => {
   const token = localStorage.getItem('token');
   try {
-    await axios.delete(`/api/reviews/${deleteId.value}`, {
+    await axios.delete(`http://localhost:3000/reviews/${deleteId.value}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     showModal.value = false;

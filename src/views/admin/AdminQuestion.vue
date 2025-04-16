@@ -37,7 +37,7 @@ const fetchQuestions = async () => {
       throw new Error('Unauthorized: No token found');
     }
 
-    const response = await axios.get('/api/questions', {
+    const response = await axios.get('http://localhost:3000/questions', {
       headers: {
         Authorization: `Bearer ${token}`, // ส่ง Token ใน Header
       },
@@ -98,7 +98,7 @@ const handleDelete = async () => {
         throw new Error('Unauthorized: No token found');
       }
 
-      await axios.delete(`/api/questions/${deleteId.value}`, {
+      await axios.delete(`http://localhost:3000/questions/${deleteId.value}`, {
         headers: {
           Authorization: `Bearer ${token}`, // ส่ง Token ใน Header
         },

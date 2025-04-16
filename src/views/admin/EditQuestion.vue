@@ -42,7 +42,7 @@ const handleInput = (event: Event) => {
 const fetchQuestion = async () => {
   try {
     const token = localStorage.getItem('token')
-    const res = await axios.get(`/api/questions/${questionId}`, {
+    const res = await axios.get(`http://localhost:3000/questions/${questionId}`, {
       headers: { Authorization: `Bearer ${token}` }
     })
 
@@ -81,7 +81,7 @@ const submitForm = async () => {
   console.log('Editing by userId:', payload.sub, 'role:', payload.role)
 
   try {
-    await axios.put(`/api/questions/${questionId}`, {
+    await axios.put(`http://localhost:3000/questions/${questionId}`, {
       title: title.value,
       description: description.value,
       date: date.value,
