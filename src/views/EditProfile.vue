@@ -52,14 +52,21 @@ const saveAll = async () => {
     originalUser.value = { ...user.value }
     localStorage.setItem('user', JSON.stringify(user.value))
     window.dispatchEvent(new Event('user-logged-in'))
-  } catch (err: any) {
-    const message = err.response?.data?.message || err.message
-    if (message.includes('entity too large')) {
-      showModalError('The file size exceeds the 2MB limit. Please select a smaller file.')
-    } else {
-      showModalError('Error: ' + message)
-    }
+  } catch (err: unknown) {
+  let message = 'An unknown error occurred.'
+
+  if (axios.isAxiosError(err)) {
+    message = err.response?.data?.message || err.message
+  } else if (err instanceof Error) {
+    message = err.message
   }
+
+  if (message.includes('entity too large')) {
+    showModalError('The file size exceeds the 2MB limit. Please select a smaller file.')
+  } else {
+    showModalError('Error: ' + message)
+  }
+}
 }
 
 const handlePhotoChange = (event: Event) => {
@@ -149,7 +156,7 @@ const showModalError = (msg: string) => {
           Save
         </button>
         <button
-          @click="$router.push('/posts')"
+          @click="router.push('/posts')"
           class="px-6 py-2 rounded text-white bg-red-500 hover:bg-red-600"
         >
           Cancel

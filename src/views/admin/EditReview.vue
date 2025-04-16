@@ -2,7 +2,7 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
-import type { da } from 'vuetify/locale';
+// import type { da } from 'vuetify/locale';
 
 const route = useRoute();
 const router = useRouter();
@@ -71,7 +71,7 @@ const handleSubmit = async () => {
   try {
     const payload = JSON.parse(atob(token.split('.')[1]));
     userId = payload?.sub;
-  } catch (e) {
+  } catch {
     console.error('Invalid token format');
   }
 
@@ -111,9 +111,6 @@ const redirectBack = () => {
   }
 };
 
-const closeErrorPopup = () => {
-  showError.value = false;
-};
 </script>
 
 <template>

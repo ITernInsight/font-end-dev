@@ -1,27 +1,49 @@
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
 
+// Types
+interface User {
+  id: number;
+  name: string;
+}
+
+interface Comment {
+  id: number;
+  text: string;
+  date: string;
+  user: User;
+}
+
+interface Review {
+  id: number;
+  title: string;
+  description?: string;
+  date: string;
+  user?: User;
+  like?: unknown[];
+}
+
 const route = useRoute();
 const router = useRouter();
 
-const review = ref(null);
-const comments = ref([]);
+const review = ref<Review | null>(null);
+const comments = ref<Comment[]>([]);
 const commentText = ref('');
-const user = ref(JSON.parse(localStorage.getItem('user')));
+const user = ref<User | null>(JSON.parse(localStorage.getItem('user') || 'null'));
 const showModal = ref(false);
-const deleteId = ref(null);
+const deleteId = ref<number | null>(null);
 const deleteTitle = ref('');
-const editCommentId = ref(null);
+const editCommentId = ref<number | null>(null);
 const editText = ref('');
-const deleteCommentId = ref(null);
+const deleteCommentId = ref<number | null>(null);
 const showCommentDelete = ref(false);
+
 const likeCount = computed(() => review.value?.like?.length || 0);
 
-
 const id = Number(route.params.id);
-const from = route.query.from || 'user';
+const from = (route.query.from as string) || 'user';
 
 const fetchReview = async () => {
   const token = localStorage.getItem('token');
@@ -44,14 +66,18 @@ const submitComment = async () => {
   const token = localStorage.getItem('token');
   const now = new Date();
 
-  const res = await axios.post(`http://localhost:3000/reviews/${id}/comment`, {
-    text: commentText.value,
-    date: now,
-    user: user.value.id,
-    review: id,
-  }, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const res = await axios.post(
+    `http://localhost:3000/reviews/${id}/comment`,
+    {
+      text: commentText.value,
+      date: now,
+      user: user.value?.id,
+      review: id,
+    },
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
 
   if (res.status === 201 || res.status === 200) {
     commentText.value = '';
@@ -59,7 +85,7 @@ const submitComment = async () => {
   }
 };
 
-const startEditComment = (comment) => {
+const startEditComment = (comment: Comment) => {
   editCommentId.value = comment.id;
   editText.value = comment.text;
 };
@@ -71,19 +97,21 @@ const cancelEditComment = () => {
 
 const saveCommentEdit = async () => {
   const token = localStorage.getItem('token');
-  await axios.put(`http://localhost:3000/reviews/${id}/comment/${editCommentId.value}`, {
-    text: editText.value,
-  }, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-
-
+  await axios.put(
+    `http://localhost:3000/reviews/${id}/comment/${editCommentId.value}`,
+    {
+      text: editText.value,
+    },
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
 
   cancelEditComment();
   await fetchComments();
 };
 
-const confirmDeleteComment = (id) => {
+const confirmDeleteComment = (id: number) => {
   deleteCommentId.value = id;
   showCommentDelete.value = true;
 };
@@ -101,7 +129,7 @@ const cancelDeleteComment = () => {
   showCommentDelete.value = false;
 };
 
-const confirmDelete = (id, title) => {
+const confirmDelete = (id: number, title: string) => {
   deleteId.value = id;
   deleteTitle.value = title;
   showModal.value = true;
@@ -121,7 +149,7 @@ const cancelDelete = () => {
   showModal.value = false;
 };
 
-const formatDate = (dateStr) => {
+const formatDate = (dateStr: string): string => {
   const d = new Date(dateStr);
   return isNaN(d.getTime()) ? 'Invalid Date' : d.toLocaleString();
 };
@@ -131,6 +159,7 @@ onMounted(() => {
   fetchComments();
 });
 </script>
+
 
 <style scoped></style>
 

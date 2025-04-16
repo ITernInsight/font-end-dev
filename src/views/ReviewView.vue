@@ -4,15 +4,23 @@ import { RouterLink, useRouter } from 'vue-router';
 import axios from 'axios';
 import Filter from '../components/FilterComp.vue';
 
+interface User {
+  id: number;
+}
+
+interface ReviewLike {
+  user?: User;
+}
+
 interface Review {
   id: number;
   title: string;
   position?: string;
   description: string;
-  date: Date;
+  date: string;
   company?: string;
   userName?: string;
-  likes?: any[];
+  like?: ReviewLike[];
   isLikedByUser?: boolean;
   likesCount?: number;
 }
@@ -24,8 +32,8 @@ const selectedPosition = ref('');
 const startDate = ref('');
 const endDate = ref('');
 const router = useRouter();
-const showingMyReviews = ref(false); 
-const user = JSON.parse(localStorage.getItem('user') || 'null');
+const showingMyReviews = ref(false);
+const user: User | null = JSON.parse(localStorage.getItem('user') || 'null');
 
 const isTokenValid = () => {
   const token = localStorage.getItem('token');
@@ -70,7 +78,7 @@ const fetchMyReviews = async () => {
     });
 
     reviews.value = response.data.map(transformReview);
-    showingMyReviews.value = true; 
+    showingMyReviews.value = true;
   } catch (error) {
     console.error('Error fetching my reviews:', error);
   } finally {
@@ -78,12 +86,12 @@ const fetchMyReviews = async () => {
   }
 };
 
-const transformReview = (q: any) => {
-  const liked = q.like?.some((l: any) => l.user?.id === user?.id);
+const transformReview = (q: Review): Review => {
+  const liked = q.like?.some((l) => l.user?.id === user?.id);
   return {
     ...q,
     isLikedByUser: liked,
-    likesCount: q.like?.length || 0
+    likesCount: q.like?.length || 0,
   };
 };
 
@@ -92,16 +100,14 @@ const likeReview = async (q: Review) => {
   q.isLikedByUser = true;
   q.likesCount = (q.likesCount || 0) + 1;
   reviews.value = [...reviews.value];
-    try {
+  try {
     await axios.post(`http://localhost:3000/reviews/${q.id}/like`, {}, {
       headers: { Authorization: `Bearer ${token}` }
     });
   } catch (e) {
     q.isLikedByUser = false;
     q.likesCount = (q.likesCount || 1) - 1;
-    
     console.error('Like failed', e);
-    
   }
 };
 
@@ -205,8 +211,8 @@ onMounted(fetchAllReviews);
         </RouterLink>
         <button @click="review.isLikedByUser ? unlikeReview(review) : likeReview(review)">
           <i
-  :class="['fas', review.isLikedByUser ? 'fa-heart text-red-500' : 'fa-heart text-gray-400']">
-</i>
+            :class="['fas', review.isLikedByUser ? 'fa-heart text-red-500' : 'fa-heart text-gray-400']">
+          </i>
           <span class="ml-1 text-sm">{{ review.likesCount }}</span>
         </button>
       </div>

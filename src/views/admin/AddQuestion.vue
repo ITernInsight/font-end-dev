@@ -96,15 +96,15 @@ const addQuestion = async () => {
 
     redirectBack()
     console.log('Question added successfully:', response.data)
-  } catch (error: any) {
-    if (error.response?.data?.message) {
-      const messages = error.response.data.message
-      errorMessages.value = Array.isArray(messages) ? messages : [messages]
-      showError.value = true
-    } else {
-      console.error('Error adding question:', error)
-    }
+  } catch (error: unknown) {
+  if (axios.isAxiosError(error)) {
+    const messages = error.response?.data?.message
+    errorMessages.value = Array.isArray(messages) ? messages : [messages]
+    showError.value = true
+  } else {
+    console.error('Unexpected error:', error)
   }
+}
 }
 
 const submitForm = () => {

@@ -17,7 +17,7 @@ const editText = ref('');
 const deleteCommentId = ref(null);
 const showCommentDelete = ref(false);
 const id = Number(route.params.id);
-const from = route.query.from || 'user';
+// const from = route.query.from || 'user';
 
 const likeCount = computed(() => review.value?.like?.length || 0);
 
@@ -215,29 +215,32 @@ onMounted(() => {
     <h3 class="text-2xl font-semibold mb-2 text-hightlight">Comment</h3>
 
     <!-- ฟอร์มสำหรับการคอมเม้นต์ -->
-    <!-- <div class="bg-white shadow rounded-lg p-4 mt-4 border border-gray-300">
-      <div class="flex items-center gap-2 mb-4">
-        <div class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-white font-bold uppercase text-xl">
-          {{ user?.name?.charAt(0) || '?' }}
-        </div>
-        <div>
-          <strong class="text-xl">{{ user?.name || 'Unknown' }}</strong>
-        </div>
-      </div>
-      <div class="flex items-center border rounded-xl bg-gray-100 p-2 pr-3 ml-12">
-        <textarea
-          v-model="commentText"
-          placeholder="Comment ..."
-          class="flex-1 bg-transparent outline-none px-3 resize-none"
-          rows="1"
-        ></textarea>
-        <button @click="submitComment" :disabled="!commentText.trim()">
-          <svg :class="['w-5 h-5', commentText.trim() ? 'text-blue-600' : 'text-gray-400']" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M3.4 20.4l17.3-8.7c.5-.2.5-.9 0-1.1L3.4 2c-.5-.2-1 .2-1 .8v6.3c0 .3.2.5.5.6l11.2 2.3L2.9 14.4c-.3.1-.5.3-.5.6v6.2c0 .6.5 1 1 0.8z"/>
-          </svg>
-        </button>
-      </div>
-    </div> -->
+    <form @submit.prevent="submitComment" class="bg-white shadow rounded-lg p-4 mt-4 border border-gray-300">
+  <div class="flex items-center gap-2 mb-4">
+    <div class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-white font-bold uppercase text-xl">
+      {{ user?.name?.charAt(0) || '?' }}
+    </div>
+    <div>
+      <strong class="text-xl">{{ user?.name || 'Unknown' }}</strong>
+    </div>
+  </div>
+
+  <div class="flex items-center border rounded-xl bg-gray-100 p-2 pr-3 ml-12">
+    <textarea
+      v-model="commentText"
+      placeholder="Comment ..."
+      class="flex-1 bg-transparent outline-none px-3 resize-none"
+      rows="1"
+    ></textarea>
+
+    <!-- เปลี่ยนเป็นปุ่ม submit -->
+    <button type="submit" :disabled="!commentText.trim()">
+      <svg :class="['w-5 h-5', commentText.trim() ? 'text-blue-600' : 'text-gray-400']" fill="currentColor" viewBox="0 0 24 24">
+        <path d="M3.4 20.4l17.3-8.7c.5-.2.5-.9 0-1.1L3.4 2c-.5-.2-1 .2-1 .8v6.3c0 .3.2.5.5.6l11.2 2.3L2.9 14.4c-.3.1-.5.3-.5.6v6.2c0 .6.5 1 1 0.8z" />
+      </svg>
+    </button>
+  </div>
+</form>
 
     <!-- แสดงคอมเม้นต์ -->
     <div v-for="cmt in comments" :key="cmt.id" class="mb-4 border rounded-lg p-4">

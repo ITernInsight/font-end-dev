@@ -100,15 +100,15 @@ const addReview = async () => {
 
     redirectBack();
     console.log('Reviews added successfully:', response.data);
-  } catch (error: any) {
-    if (error.response?.data?.message) {
-      const messages = error.response.data.message;
-      errorMessages.value = Array.isArray(messages) ? messages : [messages];
-      showError.value = true;
-    } else {
-      console.error('Error adding review:', error);
-    }
+  } catch (error: unknown) {
+  if (axios.isAxiosError(error)) {
+    const messages = error.response?.data?.message;
+    errorMessages.value = Array.isArray(messages) ? messages : [messages];
+    showError.value = true;
+  } else {
+    console.error('Error adding review:', error);
   }
+}
 };
 
 const submitForm = () => {

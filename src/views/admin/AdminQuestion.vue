@@ -4,13 +4,23 @@ import { RouterLink, useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
 import FilterComp from '@/components/FilterComp.vue';
 
-const questions = ref<any[]>([]);
+// กำหนดประเภทข้อมูลให้กับ questions
+interface Question {
+  id: number;
+  title: string;
+  description: string;
+  date: string;
+  position?: string;
+}
+
+const questions = ref<Question[]>([]);  // ใช้ Question แทน any
 const route = useRoute();
 const router = useRouter();
 const showModal = ref(false);
 const deleteId = ref<number | null>(null);
 const deleteTitle = ref('');
-const id = route.params.id;
+// ลบการใช้งาน id ถ้าไม่มีการใช้งาน
+// const id = route.params.id;
 
 // ตัวแปรสำหรับ Search Bar & Date Filter
 const searchKeyword = ref('');
@@ -35,11 +45,16 @@ const fetchQuestions = async () => {
 
     questions.value = response.data;
     console.log('Questions fetched successfully:', response.data);
-  } catch (error: any) {
-    console.error('Error fetching questions:', error);
-    if (error.response && error.response.status === 401) {
-      alert('Unauthorized: Please log in again.');
-      router.push('/login'); // เปลี่ยนเส้นทางไปยังหน้า Login
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      console.error('Error fetching questions:', error);
+      if (error.response && error.response.status === 401) {
+        alert('Unauthorized: Please log in again.');
+        router.push('/login'); // เปลี่ยนเส้นทางไปยังหน้า Login
+      }
+    } else {
+      // กรณีที่ error ไม่ใช่ Axios error
+      console.error('Unexpected error:', error);
     }
   }
 };
@@ -124,6 +139,7 @@ const isDropdownOpen = ref(false);
 </script>
 
 
+
 <template>
   <!-- Header Section -->
   <div class="flex flex-row justify-between items-center w-full px-10">
@@ -177,7 +193,7 @@ const isDropdownOpen = ref(false);
   </div>
 
   <!-- 🔍 Search Bar & Date Filters -->
-  <FilterComp 
+  <FilterComp
     class="mt-4"
     @updateSearch="searchKeyword = $event"
     @updateDate="date = $event"
@@ -203,7 +219,7 @@ const isDropdownOpen = ref(false);
   <div v-if="showModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 z-50">
     <div class="bg-white p-6 rounded-lg w-96 shadow-lg">
       <h3 class="text-lg font-bold mb-6 text-center">
-        ⚠️ Are you sure you want to delete this post 
+        ⚠️ Are you sure you want to delete this post
         <span class="text-red-600">[ {{ deleteTitle }} ]</span>?
       </h3>
       <div class="flex justify-center gap-6">

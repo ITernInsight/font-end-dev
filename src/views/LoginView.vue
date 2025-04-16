@@ -45,17 +45,26 @@ const handleLogin = async () => {
     } else {
       router.push('/');
     }
-  } catch (error: any) {
-    const status = error.response?.status;
+  } catch (error: unknown) {
+  let status: number | undefined;
+
+  if (axios.isAxiosError(error)) {
+    status = error.response?.status;
+    const message = error.response?.data?.message || 'เกิดข้อผิดพลาดจากระบบ';
+
     if (status === 401) {
       errorMessage.value = 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง';
     } else if (status === 403) {
       errorMessage.value = 'คุณไม่มีสิทธิ์เข้าถึง';
     } else {
-      errorMessage.value = error.response?.data?.message || 'เกิดข้อผิดพลาดจากระบบ';
+      errorMessage.value = message;
     }
-    showErrorModal.value = true;
+  } else {
+    errorMessage.value = 'เกิดข้อผิดพลาดที่ไม่สามารถระบุได้';
   }
+
+  showErrorModal.value = true;
+}
 };
 
 const closeErrorModal = () => {

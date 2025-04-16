@@ -21,7 +21,7 @@ import EditReview from '@/views/admin/EditReview.vue'
 import DetailQuestion from '@/views/admin/DetailQuestion.vue'
 import HomeView from '@/views/HomeView.vue'
 import EditProfile from '../views/EditProfile.vue'
-import Register from '../views/Register.vue'
+import RegisterPage from '../views/RegisterPage.vue'
 
 
 const router = createRouter({
@@ -85,12 +85,12 @@ const router = createRouter({
         {
           path: 'review/:id',
           name: 'review details',
-          component: DetailReview, 
+          component: DetailReview,
         },
         {
           path: 'question/:id',
           name: 'detail question',
-          component: DetailQuestion, 
+          component: DetailQuestion,
         },
 
       ],
@@ -147,7 +147,7 @@ const router = createRouter({
       name: 'edit question (user)',
       component: EditQuestion,
     },
-    
+
     {
       path: '/login',
       name: 'login',
@@ -156,15 +156,15 @@ const router = createRouter({
     {
       path: '/register',
       name: 'register',
-      component: Register,
+      component: RegisterPage,
     },
     {
       path: '/edit-profile',
       name: 'edit profile',
       component: EditProfile,
     },
- 
-  
+
+
 
 
   ],

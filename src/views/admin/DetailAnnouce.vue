@@ -43,11 +43,15 @@ const fetchData = async () => {
     })
 
     post.value = response.data
-  } catch (error: any) {
-    console.error('Error fetching post details:', error.response?.data || error.message)
-  } finally {
-    isLoading.value = false
+  } catch (error: unknown) {
+  if (axios.isAxiosError(error)) {
+    console.error('Error fetching post details:', error.response?.data || error.message);
+  } else {
+    console.error('Unexpected error:', error);
   }
+} finally {
+  isLoading.value = false;
+}
 }
 
 const deleteAnnouncement = async (id: number) => {
@@ -62,9 +66,13 @@ const deleteAnnouncement = async (id: number) => {
     })
 
     router.push('/admin/annouce')
-  } catch (error: any) {
-    console.error('Error deleting announcement:', error.response?.data || error.message)
+  } catch (error: unknown) {
+  if (axios.isAxiosError(error)) {
+    console.error('Error deleting announcement:', error.response?.data || error.message);
+  } else {
+    console.error('Unexpected error:', error);
   }
+}
 }
 
 const confirmDelete = (id: number) => {
