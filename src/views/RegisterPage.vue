@@ -22,7 +22,8 @@ const registerUser = async () => {
       password: password.value,
       phone: phone.value,
       position: position.value,
-      description: description.value
+      description: description.value,
+      image: 'default.jpg'
     }
 
     console.log('🔁 Sending register payload:', payload)
