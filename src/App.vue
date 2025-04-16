@@ -6,29 +6,29 @@ import ProfileDropdown from '@/components/ProfileDropdown.vue'
 const route = useRoute()
 const router = useRouter()
 
-const isLoggedIn = ref(false)
+const isLoggedIn = ref<boolean>(false)
 
 const checkLoginStatus = () => {
   const user = localStorage.getItem('user')
   try {
-    isLoggedIn.value = !!JSON.parse(user)
+    // ตรวจสอบการพาร์สข้อมูลเพื่อหลีกเลี่ยงข้อผิดพลาด
+    isLoggedIn.value = !!(user && JSON.parse(user))
   } catch {
     isLoggedIn.value = false
   }
 }
 
 onMounted(() => {
-  checkLoginStatus() 
+  checkLoginStatus()
   window.addEventListener('user-logged-in', checkLoginStatus)
   window.addEventListener('user-logged-out', checkLoginStatus)
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('user-logged-in', checkLoginStatus)
-  
+  window.removeEventListener('user-logged-out', checkLoginStatus)
 })
 
-// ตรวจสอบการเปลี่ยนเส้นทาง
 watch(
   () => route.path,
   () => {
@@ -50,7 +50,7 @@ watch(
     <ProfileDropdown v-if="isLoggedIn" />
 
     <!-- แสดงปุ่ม Log In ถ้ายังไม่ได้ login -->
-    <button v-if="isLoggedIn === false && route.name !== 'login'&& route.name !== 'register' " @click="router.push('/login') "
+    <button v-if="!isLoggedIn && route.name !== 'login' && route.name !== 'register'" @click="router.push('/login')"
       class="text-white text-xs font-bold bg-gradient-to-b from-button px-4 py-1.5 h-fit to-button/50 shadow-md rounded-lg lg:text-sm">
       Log In
     </button>

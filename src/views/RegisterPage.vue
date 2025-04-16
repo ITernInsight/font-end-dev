@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import axios from 'axios'
+import axios, { AxiosError } from 'axios'  // Import AxiosError
 import { useRouter } from 'vue-router'
 
 const name = ref('')
@@ -33,8 +33,14 @@ const registerUser = async () => {
     router.push('/login')
   } catch (error) {
     console.error('❌ Registration error:', error)
-    errorMessage.value =
-      error?.response?.data?.message || 'Registration failed. Please try again.'
+
+    // ตรวจสอบว่าข้อผิดพลาดเป็น instance ของ AxiosError หรือไม่
+    if (error instanceof AxiosError && error.response) {
+      errorMessage.value =
+        error.response.data?.message || 'Registration failed. Please try again.'
+    } else {
+      errorMessage.value = 'An unexpected error occurred. Please try again.'
+    }
   }
 }
 </script>

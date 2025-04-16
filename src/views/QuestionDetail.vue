@@ -3,26 +3,49 @@ import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
 
+// กำหนดประเภทให้กับตัวแปรต่าง ๆ
+interface User {
+  id: number;
+  name: string;
+}
+
+interface Comment {
+  id: number;
+  text: string;
+  user: User;
+  date: string;
+}
+
+interface Question {
+  id: number;
+  title: string;
+  description: string;
+  date: string;
+  user: User;
+  like: unknown[];
+}
+
 const route = useRoute();
 const router = useRouter();
 
+// กำหนดประเภทให้กับตัวแปรที่ใช้ใน ref
 const id = Number(route.params.id);
 const from = route.query.from || 'user';
 
-const question = ref<any>(null);
-const comments = ref([]);
-const commentText = ref('');
+const question = ref<Question | null>(null);  // ใช้ประเภท Question หรือ null
+const comments = ref<Comment[]>([]);  // ใช้ประเภท Comment[]
+const commentText = ref<string>('');  // ใช้ประเภท string
 const showModal = ref(false);
 const deleteId = ref<number | null>(null);
-const deleteTitle = ref('');
-const isLoading = ref(true);
-const editCommentId = ref(null);
-const editText = ref('');
-const deleteCommentId = ref(null);
+const deleteTitle = ref<string>('');
+// const isLoading = ref(true);
+const editCommentId = ref<number | null>(null);
+const editText = ref<string>('');
+const deleteCommentId = ref<number | null>(null);
 const showCommentDelete = ref(false);
 const likeCount = computed(() => question.value?.like?.length || 0);
 
-const user = ref<any>(null);
+const user = ref<User | null>(null);  // ใช้ประเภท User หรือ null
 
 onMounted(() => {
   const stored = localStorage.getItem('user');
@@ -32,10 +55,7 @@ onMounted(() => {
   fetchQuestion();
   fetchComments();
   console.log('✅ user from localStorage:', user.value);
-
 });
-
-
 
 const fetchQuestion = async () => {
   const token = localStorage.getItem('token');
@@ -45,7 +65,6 @@ const fetchQuestion = async () => {
   question.value = response.data || {};
   console.log('Loaded question:', question.value);
 };
-
 
 const fetchComments = async () => {
   try {
@@ -63,7 +82,7 @@ const submitComment = async () => {
   const res = await axios.post(`http://localhost:3000/questions/${id}/comment`, {
     text: commentText.value,
     date: now,
-    user: user.value.id,
+    user: user.value?.id,  // ป้องกันการใช้ null
     question: id,
   }, {
     headers: { Authorization: `Bearer ${token}` },
@@ -75,7 +94,7 @@ const submitComment = async () => {
   }
 };
 
-const startEditComment = (comment) => {
+const startEditComment = (comment: Comment) => {
   editCommentId.value = comment.id;
   editText.value = comment.text;
 };
@@ -97,7 +116,7 @@ const saveCommentEdit = async () => {
   await fetchComments();
 };
 
-const confirmDeleteComment = (id) => {
+const confirmDeleteComment = (id: number) => {
   deleteCommentId.value = id;
   showCommentDelete.value = true;
 };
@@ -115,7 +134,7 @@ const cancelDeleteComment = () => {
   showCommentDelete.value = false;
 };
 
-const formatDate = (dateStr) => {
+const formatDate = (dateStr: string) => {
   const d = new Date(dateStr);
   return isNaN(d.getTime()) ? 'Invalid Date' : d.toLocaleString();
 };
@@ -169,6 +188,7 @@ onMounted(() => {
   fetchComments();
 });
 </script>
+
 
 
 
