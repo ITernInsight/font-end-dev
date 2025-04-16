@@ -43,7 +43,7 @@ const fetchReview = async () => {
       return;
     }
 
-    const res = await axios.get(`http://localhost:3000/reviews/${id.value}`, {
+    const res = await axios.get(`/api/reviews/${id.value}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
 
@@ -82,7 +82,7 @@ const handleSubmit = async () => {
 
   try {
     isSubmitting.value = true;
-    await axios.put(`http://localhost:3000/reviews/${id.value}`, {
+    await axios.put(`/api/reviews/${id.value}`, {
       title: title.value,
       description: description.value,
       date: date.value,

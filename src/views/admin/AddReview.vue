@@ -84,7 +84,7 @@ const addReview = async () => {
     }
 
     const response = await axios.post(
-      'http://localhost:3000/reviews',
+      '/api/reviews',
       {
         userId,
         title: title.value,

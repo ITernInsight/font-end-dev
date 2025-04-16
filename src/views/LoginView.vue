@@ -17,7 +17,7 @@ const filteredUsers = ref<{ username: string; password: string }[]>([]);
 
 const handleLogin = async () => {
   try {
-    const response = await axios.post('http://localhost:3000/login', {
+    const response = await axios.post('/api/login', {
       username: username.value.trim().toLowerCase(),
       password: password.value,
     });

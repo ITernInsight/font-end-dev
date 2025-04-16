@@ -47,7 +47,7 @@ const from = (route.query.from as string) || 'user';
 
 const fetchReview = async () => {
   const token = localStorage.getItem('token');
-  const response = await axios.get(`http://localhost:3000/reviews/${id}`, {
+  const response = await axios.get(`/api/reviews/${id}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   review.value = response.data;
@@ -55,7 +55,7 @@ const fetchReview = async () => {
 
 const fetchComments = async () => {
   try {
-    const res = await axios.get(`http://localhost:3000/reviews/${id}/comment`);
+    const res = await axios.get(`/api/reviews/${id}/comment`);
     comments.value = Array.isArray(res.data.comments) ? res.data.comments.reverse() : [];
   } catch (err) {
     console.error('Error fetching comments:', err);
@@ -67,7 +67,7 @@ const submitComment = async () => {
   const now = new Date();
 
   const res = await axios.post(
-    `http://localhost:3000/reviews/${id}/comment`,
+    `/api/reviews/${id}/comment`,
     {
       text: commentText.value,
       date: now,
@@ -98,7 +98,7 @@ const cancelEditComment = () => {
 const saveCommentEdit = async () => {
   const token = localStorage.getItem('token');
   await axios.put(
-    `http://localhost:3000/reviews/${id}/comment/${editCommentId.value}`,
+    `/api/reviews/${id}/comment/${editCommentId.value}`,
     {
       text: editText.value,
     },
@@ -118,7 +118,7 @@ const confirmDeleteComment = (id: number) => {
 
 const deleteComment = async () => {
   const token = localStorage.getItem('token');
-  await axios.delete(`http://localhost:3000/reviews/${id}/comment/${deleteCommentId.value}`, {
+  await axios.delete(`/api/reviews/${id}/comment/${deleteCommentId.value}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   showCommentDelete.value = false;
@@ -137,7 +137,7 @@ const confirmDelete = (id: number, title: string) => {
 
 const handleDelete = async () => {
   const token = localStorage.getItem('token');
-  await axios.delete(`http://localhost:3000/reviews/${deleteId.value}`, {
+  await axios.delete(`/api/reviews/${deleteId.value}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   showModal.value = false;
