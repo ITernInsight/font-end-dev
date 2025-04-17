@@ -3,6 +3,7 @@ import { ref, onMounted, computed } from 'vue';
 import { RouterLink, useRouter } from 'vue-router';
 import axios from 'axios';
 import Filter from '../components/FilterComp.vue';
+axios.defaults.baseURL = import.meta.env.VITE_ROOT_API
 
 interface Question {
   id: number;
@@ -12,7 +13,7 @@ interface Question {
   date: Date;
   company?: string;
   userName?: string;
-  likes?: any[];
+  likes?: unknown[];
   isLikedByUser?: boolean;
   likesCount?: number;
 }
@@ -45,15 +46,27 @@ if (!isTokenValid()) {
   router.push('/login');
 }
 
-const transformQuestion = (q: any) => {
-  const liked = q.like?.some((l: any) => l.user?.id === user?.id);
+interface RawLike {
+  user?: { id: number };
+}
+
+interface RawQuestion {
+  id: number;
+  title: string;
+  description: string;
+  date: string;
+  like?: RawLike[];
+  [key: string]: unknown;
+}
+
+const transformQuestion = (q: RawQuestion): Question => {
+  const liked = q.like?.some((l: RawLike) => l.user?.id === user?.id) ?? false;
   return {
     ...q,
     isLikedByUser: liked,
     likesCount: q.like?.length || 0,
-    date: new Date(q.date)
+    date: new Date(q.date),
   };
-
 };
 
 const fetchAllQuestions = async () => {
@@ -61,7 +74,7 @@ const fetchAllQuestions = async () => {
     const token = localStorage.getItem('token');
     if (!token) throw new Error('Unauthorized: No token found');
 
-    const response = await axios.get('/api/questions', {
+    const response = await axios.get('http://localhost:3000/questions', {
       headers: { Authorization: `Bearer ${token}` },
     });
 
@@ -81,7 +94,7 @@ const fetchMyQuestions = async () => {
     const userId = user?.id;
     if (!token || !userId) throw new Error('Unauthorized');
 
-    const response = await axios.get(`/api/questions/user/${userId}`, {
+    const response = await axios.get(`http://localhost:3000/questions/user/${userId}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
 
@@ -107,7 +120,7 @@ const likeQuestion = async (q: Question) => {
   q.isLikedByUser = true;
   q.likesCount = (q.likesCount || 0) + 1;
   try {
-    await axios.post(`/api/questions/${q.id}/like`, {}, {
+    await axios.post(`http://localhost:3000/questions/${q.id}/like`, {}, {
       headers: { Authorization: `Bearer ${token}` }
     });
   } catch (e) {
@@ -123,7 +136,7 @@ const unlikeQuestion = async (q: Question) => {
   q.likesCount = Math.max((q.likesCount || 1) - 1, 0);
   try {
     // Since DELETE /unlike doesn't exist, fallback to same like endpoint to toggle like
-    await axios.post(`/api/questions/${q.id}/like`, {}, {
+    await axios.post(`http://localhost:3000/questions/${q.id}/like`, {}, {
       headers: { Authorization: `Bearer ${token}` }
     });
   } catch (e) {

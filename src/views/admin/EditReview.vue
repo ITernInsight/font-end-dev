@@ -3,6 +3,7 @@ import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
 // import type { da } from 'vuetify/locale';
+axios.defaults.baseURL = import.meta.env.VITE_ROOT_API
 
 const route = useRoute();
 const router = useRouter();
@@ -43,7 +44,7 @@ const fetchReview = async () => {
       return;
     }
 
-    const res = await axios.get(`/api/reviews/${id.value}`, {
+    const res = await axios.get(`http://localhost:3000/reviews/${id.value}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
 
@@ -82,7 +83,7 @@ const handleSubmit = async () => {
 
   try {
     isSubmitting.value = true;
-    await axios.put(`/api/reviews/${id.value}`, {
+    await axios.put(`http://localhost:3000/reviews/${id.value}`, {
       title: title.value,
       description: description.value,
       date: date.value,

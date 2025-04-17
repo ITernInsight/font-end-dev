@@ -4,6 +4,7 @@ import axios from 'axios'
 import Filter from '../../components/FilterComp.vue'
 import router from '@/router'
 import { AxiosError } from 'axios';
+axios.defaults.baseURL = import.meta.env.VITE_ROOT_API
 
 interface Company {
   id: number
@@ -39,7 +40,7 @@ const fetchData = async () => {
       throw new Error('Unauthorized: No token found');
     }
 
-    const response = await axios.get('/api/posts', {
+    const response = await axios.get('http://localhost:3000/posts', {
       headers: {
         Authorization: `Bearer ${token}`, // เพิ่ม JWT Token ใน Header
       },
@@ -64,7 +65,7 @@ const deleteAnnouncement = async (id: number) => {
       throw new Error('Unauthorized: No token found');
     }
 
-    await axios.delete(`/api/posts/${id}`, {
+    await axios.delete(`http://localhost:3000/posts/${id}`, {
       headers: {
         Authorization: `Bearer ${token}`, // เพิ่ม JWT Token ใน Header
       },

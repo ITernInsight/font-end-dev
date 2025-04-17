@@ -2,6 +2,7 @@
 import { ref, onMounted, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
+axios.defaults.baseURL = import.meta.env.VITE_ROOT_API
 
 const router = useRouter();
 
@@ -17,7 +18,7 @@ const filteredUsers = ref<{ username: string; password: string }[]>([]);
 
 const handleLogin = async () => {
   try {
-    const response = await axios.post('/api/login', {
+    const response = await axios.post('http://localhost:3000/login', {
       username: username.value.trim().toLowerCase(),
       password: password.value,
     });

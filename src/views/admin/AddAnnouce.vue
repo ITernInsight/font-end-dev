@@ -2,7 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import axios, { AxiosError } from 'axios';
-
+axios.defaults.baseURL = import.meta.env.VITE_ROOT_API
 
 interface Company {
   id: number
@@ -76,7 +76,7 @@ const addAnnouncement = async () => {
     if (!token) throw new Error('Unauthorized')
 
     const response = await axios.post(
-      '/api/posts',
+      'http://localhost:3000/posts',
       {
         title: title.value.trim(),
         subtitle: subtitle.value.trim(),
@@ -86,7 +86,7 @@ const addAnnouncement = async () => {
         tel: tel.value.trim(),
         startDate: new Date(startDate.value),
         endDate: new Date(endDate.value),
-        image: '',
+        image: 'default.jpg',
         adminId,
         companyId: companyId.value,
       },
@@ -113,7 +113,7 @@ const submitForm = () => { if (validateForm()) addAnnouncement() }
 
 const fetchData = async () => {
   try {
-    const response = await axios.get<Company[]>('/api/companies')
+    const response = await axios.get<Company[]>('http://localhost:3000/companies')
     companies.value = response.data.map(c => ({ id: c.id, companyName: c.companyName }))
   } catch (error) {
     console.error('Error fetching data', error)

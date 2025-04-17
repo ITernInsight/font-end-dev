@@ -2,6 +2,7 @@
 import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
 import { useRouter } from 'vue-router'
+axios.defaults.baseURL = import.meta.env.VITE_ROOT_API
 
 interface UserData {
   id?: number
@@ -45,7 +46,7 @@ const saveAll = async () => {
     const id = user.value.id
     if (!token || !id) throw new Error('No token or user ID found.')
 
-    await axios.put(`/api/users/${id}`, user.value, {
+    await axios.put(`http://localhost:3000/users/${id}`, user.value, {
       headers: { Authorization: `Bearer ${token}` }
     })
 

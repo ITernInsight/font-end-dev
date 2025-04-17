@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import axios, { AxiosError } from 'axios'  // Import AxiosError
 import { useRouter } from 'vue-router'
+axios.defaults.baseURL = import.meta.env.VITE_ROOT_API
 
 const name = ref('')
 const username = ref('')

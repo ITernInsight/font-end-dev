@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
+axios.defaults.baseURL = import.meta.env.VITE_ROOT_API
 
 const route = useRoute()
 const router = useRouter()
@@ -42,7 +43,7 @@ const handleInput = (event: Event) => {
 const fetchQuestion = async () => {
   try {
     const token = localStorage.getItem('token')
-    const res = await axios.get(`/api/questions/${questionId}`, {
+    const res = await axios.get(`http://localhost:3000/questions/${questionId}`, {
       headers: { Authorization: `Bearer ${token}` }
     })
 
@@ -81,7 +82,7 @@ const submitForm = async () => {
   console.log('Editing by userId:', payload.sub, 'role:', payload.role)
 
   try {
-    await axios.put(`/api/questions/${questionId}`, {
+    await axios.put(`http://localhost:3000/questions/${questionId}`, {
       title: title.value,
       description: description.value,
       date: date.value,
