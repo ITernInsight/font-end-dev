@@ -136,7 +136,7 @@ onMounted(() => {
 
 
 <template>
-<div class="font-Prompt flex flex-col w-full space-y-2 p-2 sm:px-12 md:px-16 lg:px-32 lg:py-4 xl:px-56 2xl:px-96">
+  <div class="font-Prompt flex flex-col w-full space-y-2 p-2 sm:px-12 md:px-16 lg:px-32 lg:py-4 xl:px-56 2xl:px-96">
     <div class="flex justify-between items-center mb-2">
       <h1 class="text-left text-2xl font-bold text-hightlight">Review Detail</h1>
       <div class="text-sm text-gray-500 whitespace-nowrap">
@@ -149,7 +149,7 @@ onMounted(() => {
         <h2 class="text-2xl font-extrabold">{{ review.title || 'No title available' }}</h2>
       </div>
       <p v-if="review.description" class="text-md text-gray-700 mb-4">{{ review.description }}</p>
-      <p class="text-sm text-gray-500">Date: {{ new Date(review.date).toLocaleDateString('en-GB') }}</p>
+      <div class="text-sm text-gray-500">Date: {{ new Date(review.date).toLocaleDateString('en-GB') }}</div>
       <div v-if="user && user.id === review.user?.id" class="flex gap-4 justify-end items-center">
         <router-link
           :to="{ path: from === 'admin' ? '/admin/edit-review/' + review.id : '/edit-review/' + review.id, query: { from } }"
@@ -165,7 +165,6 @@ onMounted(() => {
     <!-- Comment section -->
     <h3 class="text-2xl font-semibold mb-2 text-hightlight">Comment</h3>
 
-
     <!-- Comment input and send button -->
     <div class="bg-white shadow rounded-lg p-4 mt-4 border border-gray-300">
       <div class="flex items-center gap-2 mb-4">
@@ -178,7 +177,6 @@ onMounted(() => {
         </div>
       </div>
       <div class="flex items-center border rounded-xl bg-gray-100 p-2 pr-3 ml-12 ">
-
         <textarea v-model="commentText" placeholder="Comment ..."
           class="flex-1 bg-transparent outline-none px-3 resize-none " rows="1"></textarea>
         <button @click="submitComment" :disabled="!commentText.trim()">
@@ -189,21 +187,21 @@ onMounted(() => {
           </svg>
         </button>
       </div>
-
     </div>
 
     <div v-for="cmt in comments" :key="cmt.id" class="mb-4 border rounded-lg p-4 ">
       <div class="flex justify-between items-start mb-1">
-        <div class="flex items-center gap-2">
+        <router-link v-if="cmt.user" :to="`/users/${cmt.user.id}`" class="flex items-center gap-2 group">
           <div
             class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-white font-bold uppercase text-xl ">
             {{ cmt.user?.name?.charAt(0) || '?' }}
           </div>
           <div>
-            <strong class="text-xl">{{ cmt.user?.name || 'Unknown' }}</strong>
+            <strong class="text-xl text-blue-600 group-hover:underline">{{ cmt.user?.name || 'Unknown' }}</strong>
             <div class="text-sm text-gray-400">{{ formatDate(cmt.date) }}</div>
           </div>
-        </div>
+        </router-link>
+
         <div v-if="user && user.id === cmt.user?.id" class="flex gap-2 text-sm text-gray-500">
           <button @click="startEditComment(cmt)"><i class="fas fa-pen"></i></button>
           <button @click="confirmDeleteComment(cmt.id)"><i class="fas fa-trash"></i></button>
@@ -228,7 +226,6 @@ onMounted(() => {
       </div>
       <p v-else class="text-base mt-1 ml-12">{{ cmt.text || '(no content)' }}</p>
     </div>
-
 
     <!-- Confirm delete modal for post -->
     <div v-if="showModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 z-50">

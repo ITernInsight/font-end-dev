@@ -140,8 +140,11 @@ const handleDeleteReview = async () => {
   showModal.value = false;
 
 
- if (user.role === 'admin') router.push('/admin/review');
-  else router.push('/reviews');
+  if (user.value.role === 'admin') {
+    router.push('/admin/review'); // หรือ '/admin/question'
+  } else {
+    router.push('/reviews'); // หรือ '/questions'
+  }
 };
 
 // Cancel delete review
@@ -162,7 +165,7 @@ onMounted(() => {
 </script>
 
 <template>
-   <div class="font-Prompt flex flex-col w-full space-y-2 p-2 sm:px-12 md:px-16 lg:px-32 lg:py-4 xl:px-56 2xl:px-96">
+  <div class="font-Prompt flex flex-col w-full space-y-2 p-2 sm:px-12 md:px-16 lg:px-32 lg:py-4 xl:px-56 2xl:px-96">
     <div class="flex justify-between items-center mb-2">
       <h1 class="text-left text-2xl font-bold text-hightlight">Review</h1>
       <div class="text-sm text-gray-500 whitespace-nowrap">
@@ -184,7 +187,8 @@ onMounted(() => {
       </p>
       <div class="flex gap-4 justify-end items-center">
         <!-- ปุ่มแก้ไขและลบโพสต์รีวิว สำหรับ admin เท่านั้น -->
-        <router-link :to="{ path: `/admin/edit-review/${review.id}`, query: { from: 'admin'} }" class="text-hightlight hover:underline">
+        <router-link :to="{ path: `/admin/edit-review/${review.id}`, query: { from: 'admin' } }"
+          class="text-hightlight hover:underline">
           <i class="fas fa-edit"></i>
         </router-link>
         <button @click="confirmDelete(review.id, review.title)" class="text-hightlight hover:underline">
@@ -202,8 +206,10 @@ onMounted(() => {
           <span class="text-red-600">[ {{ deleteTitle }} ]</span>?
         </h3>
         <div class="flex justify-center gap-6">
-          <button @click="handleDeleteReview" class="bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700">Confirm</button>
-          <button @click="cancelDeleteReview" class="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600">Cancel</button>
+          <button @click="handleDeleteReview"
+            class="bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700">Confirm</button>
+          <button @click="cancelDeleteReview"
+            class="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600">Cancel</button>
         </div>
       </div>
     </div>
@@ -240,11 +246,15 @@ onMounted(() => {
     <div v-for="cmt in comments" :key="cmt.id" class="mb-4 border rounded-lg p-4">
       <div class="flex justify-between items-start mb-1">
         <div class="flex items-center gap-2">
-          <div class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-white font-bold uppercase">
+          <div
+            class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-white font-bold uppercase">
             {{ cmt.user?.name?.charAt(0) || '?' }}
           </div>
           <div>
-            <strong class="text-xl">{{ cmt.user?.name || 'Unknown' }}</strong>
+            <router-link :to="{ path: `/users/${cmt.user?.id}`, query: { from: route.fullPath } }"
+              class="text-xl text-hightlight hover:underline">
+              {{ cmt.user?.name || 'Unknown' }}
+            </router-link>
             <div class="text-sm text-gray-400">{{ formatDate(cmt.date) }}</div>
           </div>
         </div>
@@ -260,8 +270,10 @@ onMounted(() => {
       <div v-if="editCommentId === cmt.id">
         <textarea v-model="editText" class="w-full border rounded-md p-2 resize-none mb-2"></textarea>
         <div class="flex gap-2 justify-end">
-          <button @click="saveCommentEdit" class="text-white text-xs font-bold bg-gradient-to-b from-button px-4 py-1.5 h-fit to-button/55 shadow-md rounded-lg lg:text-sm">Save</button>
-          <button @click="cancelEditComment" class="bg-gray-400 text-white px-3 py-1 rounded hover:bg-gray-500">Cancel</button>
+          <button @click="saveCommentEdit"
+            class="text-white text-xs font-bold bg-gradient-to-b from-button px-4 py-1.5 h-fit to-button/55 shadow-md rounded-lg lg:text-sm">Save</button>
+          <button @click="cancelEditComment"
+            class="bg-gray-400 text-white px-3 py-1 rounded hover:bg-gray-500">Cancel</button>
         </div>
       </div>
 
@@ -276,8 +288,10 @@ onMounted(() => {
           ⚠️ Are you sure you want to delete this comment?
         </h3>
         <div class="flex justify-center gap-6">
-          <button @click="deleteComment" class="bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700">Confirm</button>
-          <button @click="cancelDeleteComment" class="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600">Cancel</button>
+          <button @click="deleteComment"
+            class="bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700">Confirm</button>
+          <button @click="cancelDeleteComment"
+            class="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600">Cancel</button>
         </div>
       </div>
     </div>

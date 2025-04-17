@@ -10,6 +10,7 @@ interface UserData {
   phone: string
   position: string
   photoUrl: string
+  
 }
 
 const router = useRouter()

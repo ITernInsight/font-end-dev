@@ -137,10 +137,10 @@ const handleDeleteQuestion = async () => {
   });
   showModal.value = false;
   if (user.value.role === 'admin') {
-  router.push('/admin/question'); // หรือ '/admin/question'
-} else {
-  router.push('/questions'); // หรือ '/questions'
-}
+    router.push('/admin/question'); // หรือ '/admin/question'
+  } else {
+    router.push('/questions'); // หรือ '/questions'
+  }
 
 };
 
@@ -162,7 +162,7 @@ onMounted(() => {
 </script>
 
 <template>
-   <div class="font-Prompt flex flex-col w-full space-y-2 p-2 sm:px-12 md:px-16 lg:px-32 lg:py-4 xl:px-56 2xl:px-96">
+  <div class="font-Prompt flex flex-col w-full space-y-2 p-2 sm:px-12 md:px-16 lg:px-32 lg:py-4 xl:px-56 2xl:px-96">
     <div class="flex justify-between items-center mb-2">
       <h1 class="text-left text-2xl font-bold text-hightlight">Question</h1>
       <div class="text-sm text-gray-500 whitespace-nowrap">
@@ -215,13 +215,17 @@ onMounted(() => {
             {{ cmt.user?.name?.charAt(0) || '?' }}
           </div>
           <div>
-            <strong class="text-xl">{{ cmt.user?.name || 'Unknown' }}</strong>
+            <router-link :to="{ path: `/users/${cmt.user?.id}`, query: { from: route.fullPath } }"
+              class="text-xl text-hightlight hover:underline">
+              {{ cmt.user?.name || 'Unknown' }}
+            </router-link>
             <div class="text-sm text-gray-400">{{ formatDate(cmt.date) }}</div>
           </div>
         </div>
 
         <!-- Admin สามารถลบหรือแก้ไขคอมเม้นต์ได้ -->
-        <div v-if="user && (user.role === 'admin' || user.id === cmt.user?.id)" class="flex gap-2 text-sm text-gray-500">
+        <div v-if="user && (user.role === 'admin' || user.id === cmt.user?.id)"
+          class="flex gap-2 text-sm text-gray-500">
           <button @click="startEditComment(cmt)"><i class="fas fa-pen"></i></button>
           <button @click="confirmDeleteComment(cmt.id)"><i class="fas fa-trash"></i></button>
         </div>
@@ -253,8 +257,10 @@ onMounted(() => {
         ⚠️ Are you sure you want to delete this question <span class="text-red-600">[ {{ deleteTitle }} ]</span>?
       </h3>
       <div class="flex justify-center gap-6">
-        <button @click="handleDeleteQuestion" class="bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700">Confirm</button>
-        <button @click="cancelDeleteQuestion" class="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600">Cancel</button>
+        <button @click="handleDeleteQuestion"
+          class="bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700">Confirm</button>
+        <button @click="cancelDeleteQuestion"
+          class="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600">Cancel</button>
       </div>
     </div>
   </div>

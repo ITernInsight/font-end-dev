@@ -111,6 +111,7 @@ const addAnnouncement = async () => {
         endDate: endDate.value,
         adminId,
         companyId: companyId.value,
+        image: 'default.jpg'
       },
       {
         headers: {
@@ -200,6 +201,21 @@ const logDates = () => {
   console.log('End Date:', endDate.value);
 }
 
+// const selectedImage = ref<File | null>(null)
+
+// const handleFileUpload = (event: Event) => {
+//   const target = event.target as HTMLInputElement
+//   if (target.files && target.files.length > 0) {
+//     const file = target.files[0]
+//     const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg']
+//     if (allowedTypes.includes(file.type)) {
+//       selectedImage.value = file
+//     } else {
+//       alert('Only JPG and PNG files are allowed.')
+//     }
+//   }
+// }
+
 
 </script>
 
@@ -278,6 +294,12 @@ const logDates = () => {
             :min="startDate.toISOString().split('T')[0]" @change="logDates" required />
         </div>
       </div>
+
+      <!-- <div class="mb-4">
+        <label>Upload Image</label>
+        <input type="file" @change="handleFileUpload" accept="image/*" class="w-full border rounded-lg px-3 py-2" />
+      </div> -->
+
 
       <div class="flex justify-center space-x-4 mt-4">
         <RouterLink to="/admin/annouce" type="button"

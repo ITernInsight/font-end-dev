@@ -22,6 +22,7 @@ import DetailQuestion from '@/views/admin/DetailQuestion.vue'
 import HomeView from '@/views/HomeView.vue'
 import EditProfile from '../views/EditProfile.vue'
 import Register from '../views/Register.vue'
+import ViewUserProfile from '@/views/ViewUserProfile.vue'
 
 
 const router = createRouter({
@@ -163,6 +164,12 @@ const router = createRouter({
       name: 'edit profile',
       component: EditProfile,
     },
+    {
+      path: '/users/:id',
+      name: 'ViewUserProfile',
+      component: ViewUserProfile
+    }
+    
  
   
 
