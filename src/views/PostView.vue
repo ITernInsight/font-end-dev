@@ -114,8 +114,8 @@ const positions = computed(() => {
         class="flex flex-row border border-border gap-x-4 pr-4 items-start h-full"
       >
         <img
-          src=""
-          alt=""
+          src="http://localhost:9000/iterninsight/33ba28852218564451f9b6ef0d8d1ca1.png"
+          alt="Post Image"
           class="bg-gray-200 w-[120px] aspect-[3/2] border-r border-border md:w-[200px] lg:w-[280px] xl:w-[320px] 2xl:w-[400px]"
         />
         <div class="flex flex-col gap-y-1 w-full py-2 xl:gap-y-2">
@@ -153,7 +153,7 @@ const positions = computed(() => {
           </button>
         </div>
         <img
-          src=""
+          src="http://localhost:9000/iterninsight/9f349a52e3642853ef6756f52f75cd90.png"
           alt=""
           class="bg-gray-200 w-[120px] aspect-[3/2] border-r border-border md:w-[200px] lg:w-[280px] xl:w-[320px] 2xl:w-[400px]"
         />

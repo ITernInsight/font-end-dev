@@ -1,7 +1,7 @@
-<script setup>
-import { ref } from 'vue';
+<script setup lang="ts">
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import axios from 'axios';
-import { useRouter } from 'vue-router';
 import viewIcon from '@/assets/view.png'
 import hideIcon from '@/assets/hide.png'
 
@@ -36,16 +36,20 @@ const registerUser = async () => {
     console.log('Sending:', payload);
     await axios.post('http://localhost:3000/register', payload);
     router.push('/login');
-  } catch (error) {
-    console.log('❗ ERROR RESPONSE:', error.response?.data);
-    const msg = error.response?.data?.message || 'An error occurred during registration.';
-    errorMessage.value = msg;
-    showErrorModal.value = true;
 
+  } catch (error: any) {
+    // ✅ ดึงข้อความ error จาก backend
+    if (error.response && error.response.data.message) {
+      errorMessage.value = error.response.data.message
+    } else {
+      errorMessage.value = 'Registration failed.'
+    }
+    showErrorModal.value = true
   }
+};
 
 
-}; 
+
 </script>
 
 <template>
@@ -139,17 +143,23 @@ const registerUser = async () => {
     </div>
 
     <div v-if="showErrorModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-      <div class="bg-white p-6 rounded shadow-md w-96">
-        <h2 class="text-lg font-semibold text-red-600 mb-2">Registration Error</h2>
-        <p class="text-gray-800 mb-4">{{ errorMessage }}</p>
-        <button @click="showErrorModal = false" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
-          Close
-        </button>
+      <div class="bg-white p-6 rounded shadow-md w-96 relative">
+        <h2 class="text-lg font-semibold text-red-600 text-center mb-2">Registration Error</h2>
+        <p class="text-gray-800 text-center mb-4">{{ errorMessage }}</p>
+
+        <!-- ปุ่ม Close อยู่ชิดขวา -->
+        <div class="flex justify-end">
+          <button @click="showErrorModal = false" class="bg-red-500 text-white px-2 py- rounded hover:bg-red-600">
+            Close
+          </button>
+        </div>
       </div>
     </div>
 
 
+
   </div>
+
 </template>
 
 

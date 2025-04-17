@@ -11,7 +11,10 @@ const username = ref('');
 const password = ref('');
 const rememberMe = ref(false);
 const showErrorModal = ref(false);
+const showPassword = ref(false);
+
 const errorMessage = ref('');
+
 
 const savedUsers = ref<{ username: string; password: string }[]>([]);
 const showSuggestions = ref(false);
@@ -52,15 +55,15 @@ const handleLogin = async () => {
 
     if (status === 401) {
       // กรณี username หรือ password ผิด
-      errorMessage.value = 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง';
+      errorMessage.value = 'Username or password is incorrect.';
     } else if (status === 403) {
       // กรณี user ไม่มีสิทธิ์
-      errorMessage.value = 'คุณไม่มีสิทธิ์เข้าถึง';
+      errorMessage.value = 'Access denied';
     } else if (status === 404) {
       // กรณี user ไม่พบในระบบ
-      errorMessage.value = 'ไม่พบชื่อผู้ใช้นี้ในระบบ';
+      errorMessage.value = 'User not found';
     } else {
-      errorMessage.value = error.response?.data?.message || 'เกิดข้อผิดพลาดจากระบบ';
+      errorMessage.value = error.response?.data?.message || 'An unexpected system error occurred';
     }
     showErrorModal.value = true;
   }
@@ -108,13 +111,12 @@ onMounted(() => {
   }
 });
 
-const showPassword = ref(false)
 </script>
 
 
 <template>
-  <div class="register-page flex h-screen overflow-hidden">
-    <!-- ✅ ฝั่งซ้าย: fixed ไม่ขยับ -->
+  <div class="login-page flex h-screen overflow-hidden">
+    <!-- ✅ ฝั่งซ้าย -->
     <div class="w-1/2 fixed left-0 inset-y-0 overflow-clip border-b border-transparent">
       <img src="@/assets/login-bg.jpg" alt="Login Background" class="w-full min-h-full object-cover object-top" />
       <div class="absolute inset-0 bg-black bg-opacity-40"></div>
@@ -125,7 +127,7 @@ const showPassword = ref(false)
       </div>
     </div>
 
-
+    <!-- ✅ ฝั่งขวา -->
     <div class="ml-auto w-1/2 flex items-center justify-center h-screen overflow-hidden">
       <div class="w-full max-w-sm space-y-6 overflow-visible max-h-full">
         <h2 class="text-xl md:text-2xl font-semibold text-center">
@@ -135,17 +137,28 @@ const showPassword = ref(false)
         <!-- ✅ ฟอร์ม -->
         <form @submit.prevent="handleLogin" autocomplete="on" class="space-y-6">
           <!-- Username -->
-          <div>
+          <div class="relative">
             <label class="text-xs font-medium text-gray-600">Username</label>
-            <input type="text" v-model="username" @focus="showSuggestions = true" @input="filterSuggestions"
-              @blur="hideSuggestions" placeholder="johndoe123"
+            <input
+              type="text"
+              v-model="username"
+              @focus="showSuggestions = true"
+              @input="filterSuggestions"
+              @blur="hideSuggestions"
+              placeholder="johndoe123"
               class="w-full border-b border-gray-300 focus:outline-none focus:border-teal-600 text-sm py-1.5"
-              required />
-            <ul v-if="showSuggestions && filteredUsers.length"
-              class="absolute bg-white shadow w-full rounded z-10 max-h-40 overflow-y-auto">
-              <li v-for="u in filteredUsers" :key="u.username"
+              required
+            />
+            <ul
+              v-if="showSuggestions && filteredUsers.length"
+              class="absolute bg-white shadow w-full rounded z-10 max-h-40 overflow-y-auto"
+            >
+              <li
+                v-for="u in filteredUsers"
+                :key="u.username"
                 @mousedown.prevent="selectUsername(u.username, u.password)"
-                class="px-4 py-2 hover:bg-gray-100 cursor-pointer">
+                class="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+              >
                 {{ u.username }}
               </li>
             </ul>
@@ -154,31 +167,37 @@ const showPassword = ref(false)
           <!-- Password -->
           <div class="relative">
             <label class="text-xs font-medium text-gray-600">Password</label>
-            <input :type="showPassword ? 'text' : 'password'" v-model="password" placeholder="********"
+            <input
+              :type="showPassword ? 'text' : 'password'"
+              v-model="password"
+              placeholder="********"
               class="w-full border-b border-gray-300 focus:outline-none focus:border-teal-600 text-sm py-1.5 pr-10"
-              required />
+              required
+            />
             <button type="button" @click="showPassword = !showPassword"
               class="absolute right-2 top-1/2 -translate-y-1/2">
               <img :src="showPassword ? hideIcon : viewIcon" class="w-5 h-5" alt="toggle password" />
             </button>
           </div>
 
-          <!-- Remember me -->
+          <!-- Remember -->
           <div class="flex items-center gap-2">
             <input type="checkbox" id="remember" v-model="rememberMe"
               class="accent-teal-600 w-4 h-4 border-gray-300 rounded" />
             <label for="remember" class="text-xs text-gray-600">Remember me</label>
           </div>
 
-          <!-- LOG IN Button -->
-          <button type="submit"
-            class="w-full w-full bg-gradient-to-b from-button to-button/50 text-white px-4 py-2 rounded-lg shadow-sm py-2 rounded-full shadow-lg transition duration-150 ease-in-out">
+          <!-- Login button -->
+          <button
+            type="submit"
+            class="w-full bg-gradient-to-b from-button to-button/50 text-white px-4 py-2 rounded-full shadow-lg transition duration-150 ease-in-out"
+          >
             LOG IN
           </button>
 
-          <!-- Forgot password / Register -->
+          <!-- Forgot/Register -->
           <div class="text-center text-sm text-gray-500 space-y-2">
-            <button @click="router.push('/forgot-password')" class="hover:underline text-teal-600">
+            <button @click="router.push('/ForgotPassword')" class="hover:underline text-teal-600">
               Forgotten password?
             </button>
             <div>
@@ -191,9 +210,20 @@ const showPassword = ref(false)
         </form>
       </div>
     </div>
+
+    <!-- ❌ Modal -->
+    <div v-if="showErrorModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 z-[9999]">
+      <div class="bg-white p-6 rounded-lg w-96 shadow-lg">
+        <h3 class="text-lg font-bold mb-4 text-center text-red-600">Login Failed</h3>
+        <p class="text-center text-gray-700 mb-6">{{ errorMessage }}</p>
+        <div class="flex justify-center">
+          <button @click="closeErrorModal" class="bg-teal-600 text-white px-6 py-2 rounded hover:bg-teal-700">OK</button>
+        </div>
+      </div>
+    </div>
   </div>
-
-
 </template>
+
+
 
 <style scoped></style>

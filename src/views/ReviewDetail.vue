@@ -2,6 +2,7 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
+import HoverPopup from '@/components/HoverPopup.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -19,6 +20,7 @@ const deleteCommentId = ref(null);
 const showCommentDelete = ref(false);
 const likeCount = computed(() => review.value?.like?.length || 0);
 
+const hoveredUserId = ref(null)
 
 const id = Number(route.params.id);
 const from = route.query.from || 'user';
@@ -130,6 +132,7 @@ onMounted(() => {
   fetchReview();
   fetchComments();
 });
+
 </script>
 
 <style scoped></style>
@@ -173,7 +176,7 @@ onMounted(() => {
           {{ user?.name?.charAt(0) || '?' }}
         </div>
         <div>
-          <strong class="text-xl">{{ user?.name || 'Unknown' }}</strong>
+          <strong class="text-hightlight  text-xl">{{ user?.name || 'Unknown' }}</strong>
         </div>
       </div>
       <div class="flex items-center border rounded-xl bg-gray-100 p-2 pr-3 ml-12 ">
@@ -191,16 +194,36 @@ onMounted(() => {
 
     <div v-for="cmt in comments" :key="cmt.id" class="mb-4 border rounded-lg p-4 ">
       <div class="flex justify-between items-start mb-1">
-        <router-link v-if="cmt.user" :to="`/users/${cmt.user.id}`" class="flex items-center gap-2 group">
-          <div
-            class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-white font-bold uppercase text-xl ">
-            {{ cmt.user?.name?.charAt(0) || '?' }}
-          </div>
-          <div>
-            <strong class="text-xl text-blue-600 group-hover:underline">{{ cmt.user?.name || 'Unknown' }}</strong>
-            <div class="text-sm text-gray-400">{{ formatDate(cmt.date) }}</div>
-          </div>
-        </router-link>
+<!-- Commenter Info + Hover Popup -->
+<div
+  v-if="cmt.user"
+  class="relative inline-block"
+  @mouseenter="hoveredUserId = cmt.user.id"
+  @mouseleave="hoveredUserId = null"
+>
+  <router-link :to="`/users/${cmt.user.id}`" class="flex items-center gap-2 group cursor-pointer">
+    <div class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-white font-bold uppercase text-xl">
+      {{ cmt.user?.name?.charAt(0) || '?' }}
+    </div>
+    <div>
+      <strong class="text-xl text-hightlight group-hover:underline">
+        {{ cmt.user?.name || 'Unknown' }}
+      </strong>
+      <div class="text-sm text-gray-400">
+        {{ formatDate(cmt.date) }}
+      </div>
+    </div>
+  </router-link>
+
+  <!-- ✅ Popup only on hover -->
+  <HoverPopup
+    v-if="hoveredUserId === cmt.user.id"
+    :user="cmt.user"
+    class="absolute top-full left-0 z-50"
+  />
+</div>
+
+
 
         <div v-if="user && user.id === cmt.user?.id" class="flex gap-2 text-sm text-gray-500">
           <button @click="startEditComment(cmt)"><i class="fas fa-pen"></i></button>
@@ -258,3 +281,4 @@ onMounted(() => {
     </div>
   </div>
 </template>
+

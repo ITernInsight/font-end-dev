@@ -49,11 +49,15 @@ watch(
     <!-- แสดง ProfileDropdown ถ้า login แล้ว -->
     <ProfileDropdown v-if="isLoggedIn" />
 
-    <!-- แสดงปุ่ม Log In ถ้ายังไม่ได้ login -->
-    <button v-if="isLoggedIn === false && route.name !== 'login'&& route.name !== 'register' " @click="router.push('/login') "
-      class="text-white text-xs font-bold bg-gradient-to-b from-button px-4 py-1.5 h-fit to-button/50 shadow-md rounded-lg lg:text-sm">
-      Log In
-    </button>
+    <!-- แสดงปุ่ม Log In ถ้ายังไม่ได้ login และไม่ได้อยู่หน้า login, register, forgot-password -->
+<button
+  v-if="!isLoggedIn && route.name !== 'login' && route.name !== 'register' && route.name !== 'ForgotPassword'"
+  @click="router.push('/login')"
+  class="text-white text-xs font-bold bg-gradient-to-b from-button px-4 py-1.5 h-fit to-button/50 shadow-md rounded-lg lg:text-sm"
+>
+  Log In
+</button>
+
   </header>
 
   <RouterView />

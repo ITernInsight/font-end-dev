@@ -23,6 +23,7 @@ import HomeView from '@/views/HomeView.vue'
 import EditProfile from '../views/EditProfile.vue'
 import Register from '../views/Register.vue'
 import ViewUserProfile from '@/views/ViewUserProfile.vue'
+import ForgotPassword from '@/views/ForgotPassword.vue'
 
 
 const router = createRouter({
@@ -168,7 +169,12 @@ const router = createRouter({
       path: '/users/:id',
       name: 'ViewUserProfile',
       component: ViewUserProfile
-    }
+    },
+    {
+      path: '/ForgotPassword',
+      name: 'ForgotPassword',
+      component: ForgotPassword,
+    },
     
  
   

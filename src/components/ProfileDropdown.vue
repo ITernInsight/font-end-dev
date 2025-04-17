@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, watch } from 'vue';
+import { ref, onMounted, onBeforeUnmount, watch, computed } from 'vue'; // ✅ เพิ่ม computed
 import { useRouter, useRoute } from 'vue-router';
 import editIcon from '@/assets/EditProfile.png';
 import logoutIcon from '@/assets/logout.png';
@@ -7,16 +7,9 @@ import logoutIcon from '@/assets/logout.png';
 const router = useRouter();
 const route = useRoute();
 
-const user = ref<{ name: string; email?: string; photoUrl?: string; role?: string } | null>(null);
+const user = ref<{ name: string; email?: string; image?: string; role?: string } | null>(null);
 const showMenu = ref(false);
 const isLoggedIn = ref(false);
-
-const defaultUserData = {
-  name: '',
-  email: '',
-  photoUrl: '',
-  role: ''
-};
 
 const logout = () => {
   localStorage.removeItem('user');
@@ -24,9 +17,7 @@ const logout = () => {
   isLoggedIn.value = false;
   window.dispatchEvent(new Event('user-logged-out'));
   router.push('/posts');
-  
 };
-
 
 const updateUser = () => {
   const stored = localStorage.getItem('user');
@@ -60,6 +51,21 @@ watch(route, () => {
 const goToEditProfile = () => {
   router.push('/edit-profile');
 };
+
+// ✅ เพิ่ม computed สำหรับ URL ของรูป
+const profileImageUrl = computed(() => {
+  const filename = user.value?.image || '';
+  if (filename && filename !== 'null' && filename !== 'undefined') {
+    // ป้องกัน cache และตรวจรูปได้ทันทีหลัง upload
+    return `http://localhost:9000/iterninsight/${filename}?t=${Date.now()}`;
+  }
+  return 'https://cdn-icons-png.flaticon.com/512/1144/1144760.png';
+});
+
+
+
+
+
 </script>
 
 <template>
@@ -72,8 +78,9 @@ const goToEditProfile = () => {
       <div
         class="w-8 h-8 rounded-full bg-white text-primary font-bold flex items-center justify-center uppercase overflow-hidden"
       >
-        <template v-if="user?.photoUrl">
-          <img :src="user.photoUrl" alt="Profile" class="w-full h-full object-cover" />
+        <!-- ✅ เปลี่ยนเป็นใช้ computed profileImageUrl -->
+        <template v-if="profileImageUrl">
+          <img :src="profileImageUrl" alt="Profile" class="w-full h-full object-cover" />
         </template>
         <template v-else>
           {{ user?.name?.charAt(0) || '?' }}
@@ -95,8 +102,9 @@ const goToEditProfile = () => {
         <div
           class="w-12 h-12 rounded-full bg-white text-primary font-bold flex items-center justify-center uppercase border-2 border-primary overflow-hidden"
         >
-          <template v-if="user?.photoUrl">
-            <img :src="user.photoUrl" alt="Profile" class="w-full h-full object-cover" />
+          <!-- ✅ ใช้ profileImageUrl อีกจุด -->
+          <template v-if="profileImageUrl">
+            <img :src="profileImageUrl" alt="Profile" class="w-full h-full object-cover" />
           </template>
           <template v-else>
             {{ user?.name?.charAt(0) || '?' }}
