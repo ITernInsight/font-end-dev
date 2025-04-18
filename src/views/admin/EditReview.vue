@@ -3,7 +3,7 @@ import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
 // import type { da } from 'vuetify/locale';
-axios.defaults.baseURL = import.meta.env.VITE_ROOT_API
+// axios.defaults.baseURL = import.meta.env.VITE_ROOT_API
 
 const route = useRoute();
 const router = useRouter();

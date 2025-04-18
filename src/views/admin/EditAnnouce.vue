@@ -4,7 +4,7 @@ import axios from 'axios';
 import router from '@/router';
 import { useRoute } from 'vue-router';
 import { AxiosError } from 'axios';
-axios.defaults.baseURL = import.meta.env.VITE_ROOT_API
+// axios.defaults.baseURL = import.meta.env.VITE_ROOT_API
 
 interface Company {
   id: number

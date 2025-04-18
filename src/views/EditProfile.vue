@@ -2,7 +2,7 @@
 import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
 import { useRouter } from 'vue-router'
-axios.defaults.baseURL = import.meta.env.VITE_ROOT_API
+// axios.defaults.baseURL = import.meta.env.VITE_ROOT_API
 
 interface UserData {
   id?: number

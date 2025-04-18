@@ -2,7 +2,7 @@
 import { ref, onMounted, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
-axios.defaults.baseURL = import.meta.env.VITE_ROOT_API
+// axios.defaults.baseURL = import.meta.env.VITE_ROOT_API
 
 const router = useRouter();
 

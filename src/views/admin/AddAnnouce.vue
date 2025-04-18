@@ -2,7 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import axios, { AxiosError } from 'axios';
-axios.defaults.baseURL = import.meta.env.VITE_ROOT_API
+// axios.defaults.baseURL = import.meta.env.VITE_ROOT_API
 
 interface Company {
   id: number

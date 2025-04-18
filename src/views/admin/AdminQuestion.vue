@@ -3,7 +3,7 @@ import { ref, computed, onMounted } from 'vue';
 import { RouterLink, useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
 import FilterComp from '@/components/FilterComp.vue';
-axios.defaults.baseURL = import.meta.env.VITE_ROOT_API
+// axios.defaults.baseURL = import.meta.env.VITE_ROOT_API
 
 // กำหนดประเภทข้อมูลให้กับ questions
 interface Question {

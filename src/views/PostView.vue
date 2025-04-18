@@ -2,7 +2,7 @@
 import { computed, ref, onMounted } from 'vue'
 import axios from 'axios'
 import Filter from '../components/FilterComp.vue'
-axios.defaults.baseURL = import.meta.env.VITE_ROOT_API
+// axios.defaults.baseURL = import.meta.env.VITE_ROOT_API
 
 interface Company {
   id: number
