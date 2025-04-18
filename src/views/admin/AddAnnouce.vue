@@ -76,7 +76,7 @@ const addAnnouncement = async () => {
     if (!token) throw new Error('Unauthorized')
 
     const response = await axios.post(
-      'http://localhost:3000/posts',
+      'https://capstone24.sit.kmutt.ac.th/un3/api/posts',
       {
         title: title.value.trim(),
         subtitle: subtitle.value.trim(),
@@ -113,7 +113,7 @@ const submitForm = () => { if (validateForm()) addAnnouncement() }
 
 const fetchData = async () => {
   try {
-    const response = await axios.get<Company[]>('http://localhost:3000/companies')
+    const response = await axios.get<Company[]>('https://capstone24.sit.kmutt.ac.th/un3/api/companies')
     companies.value = response.data.map(c => ({ id: c.id, companyName: c.companyName }))
   } catch (error) {
     console.error('Error fetching data', error)

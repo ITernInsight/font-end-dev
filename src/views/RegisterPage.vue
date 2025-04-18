@@ -29,7 +29,7 @@ const registerUser = async () => {
 
     console.log('🔁 Sending register payload:', payload)
 
-    await axios.post('http://localhost:3000/register', payload)
+    await axios.post('https://capstone24.sit.kmutt.ac.th/un3/api/register', payload)
 
     // ✅ Success -> redirect
     router.push('/login')

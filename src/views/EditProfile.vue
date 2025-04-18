@@ -46,7 +46,7 @@ const saveAll = async () => {
     const id = user.value.id
     if (!token || !id) throw new Error('No token or user ID found.')
 
-    await axios.put(`http://localhost:3000/users/${id}`, user.value, {
+    await axios.put(`https://capstone24.sit.kmutt.ac.th/un3/api/users/${id}`, user.value, {
       headers: { Authorization: `Bearer ${token}` }
     })
 
