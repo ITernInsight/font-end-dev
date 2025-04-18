@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 import axios, { AxiosError } from 'axios'  // Import AxiosError
 import { useRouter } from 'vue-router'
-// axios.defaults.baseURL = import.meta.env.VITE_ROOT_API
+
 
 const name = ref('')
 const username = ref('')
@@ -29,7 +29,7 @@ const registerUser = async () => {
 
     console.log('🔁 Sending register payload:', payload)
 
-    await axios.post('https://capstone24.sit.kmutt.ac.th/un3/api/register', payload)
+    await axios.post('http://localhost:3000/register', payload)
 
     // ✅ Success -> redirect
     router.push('/login')

@@ -2,7 +2,7 @@
 import { computed, ref, onMounted } from 'vue'
 import axios from 'axios'
 import Filter from '../components/FilterComp.vue'
-// axios.defaults.baseURL = import.meta.env.VITE_ROOT_API
+
 
 interface Company {
   id: number
@@ -31,7 +31,7 @@ const endDateSelected = ref('') // end date filter
 
 const fetchData = async () => {
   try {
-    const response = await axios.get<Post[]>('https://capstone24.sit.kmutt.ac.th/un3/api/posts')
+    const response = await axios.get<Post[]>('http://localhost:3000/posts')
     // Flatten the data by extracting the companyName
     posts.value = response.data.map((post) => ({
       id: post.id,

@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import axios from 'axios'
 import router from '@/router'
-// axios.defaults.baseURL = import.meta.env.VITE_ROOT_API
+
 
 interface Company {
   id: number
@@ -37,7 +37,7 @@ const fetchData = async () => {
     const token = localStorage.getItem('token')
     if (!token) throw new Error('Unauthorized: No token found')
 
-    const response = await axios.get(`https://capstone24.sit.kmutt.ac.th/un3/api/posts/${postId}`, {
+    const response = await axios.get(`http://localhost:3000/posts/${postId}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -60,7 +60,7 @@ const deleteAnnouncement = async (id: number) => {
     const token = localStorage.getItem('token')
     if (!token) throw new Error('Unauthorized: No token found')
 
-    await axios.delete(`https://capstone24.sit.kmutt.ac.th/un3/api/posts/${id}`, {
+    await axios.delete(`http://localhost:3000/posts/${id}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },

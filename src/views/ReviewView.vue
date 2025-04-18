@@ -3,7 +3,7 @@ import { ref, onMounted, computed } from 'vue';
 import { RouterLink, useRouter } from 'vue-router';
 import axios from 'axios';
 import Filter from '../components/FilterComp.vue';
-// axios.defaults.baseURL = import.meta.env.VITE_ROOT_API
+
 
 interface User {
   id: number;
@@ -55,7 +55,7 @@ const fetchAllReviews = async () => {
     const token = localStorage.getItem('token');
     if (!token) throw new Error('Unauthorized: No token found');
 
-    const response = await axios.get('https://capstone24.sit.kmutt.ac.th/un3/api/reviews', {
+    const response = await axios.get('http://localhost:3000/reviews', {
       headers: { Authorization: `Bearer ${token}` },
     });
     reviews.value = response.data.map(transformReview);
@@ -74,7 +74,7 @@ const fetchMyReviews = async () => {
     const userId = user?.id;
     if (!token || !user) throw new Error('Unauthorized');
 
-    const response = await axios.get(`https://capstone24.sit.kmutt.ac.th/un3/api/reviews/user/${userId}`, {
+    const response = await axios.get(`http://localhost:3000/reviews/user/${userId}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
 
@@ -102,7 +102,7 @@ const likeReview = async (q: Review) => {
   q.likesCount = (q.likesCount || 0) + 1;
   reviews.value = [...reviews.value];
   try {
-    await axios.post(`https://capstone24.sit.kmutt.ac.th/un3/api/reviews/${q.id}/like`, {}, {
+    await axios.post(`http://localhost:3000/reviews/${q.id}/like`, {}, {
       headers: { Authorization: `Bearer ${token}` }
     });
   } catch (e) {
@@ -118,7 +118,7 @@ const unlikeReview = async (q: Review) => {
   q.likesCount = Math.max((q.likesCount || 1) - 1, 0);
   reviews.value = [...reviews.value];
   try {
-    await axios.post(`https://capstone24.sit.kmutt.ac.th/un3/api/reviews/${q.id}/like`, {}, {
+    await axios.post(`http://localhost:3000/reviews/${q.id}/like`, {}, {
       headers: { Authorization: `Bearer ${token}` }
     });
   } catch (e) {

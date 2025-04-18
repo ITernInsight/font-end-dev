@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 import axios from 'axios'
 import { useRouter, useRoute } from 'vue-router'
-// axios.defaults.baseURL = import.meta.env.VITE_ROOT_API
+
 
 const title = ref('')
 const description = ref('')
@@ -83,7 +83,7 @@ const addQuestion = async () => {
       throw new Error('Invalid user data');
     }
     const response = await axios.post(
-      'https://capstone24.sit.kmutt.ac.th/un3/api/questions',
+      'http://localhost:3000/questions',
       {
         userId,
         title: title.value,

@@ -3,7 +3,7 @@
   import { RouterLink, useRoute, useRouter } from 'vue-router'
   import axios from 'axios'
   import FilterComp from '@/components/FilterComp.vue'
-  // axios.defaults.baseURL = import.meta.env.VITE_ROOT_API
+
 
   // Define the type for a review
   interface Review {
@@ -37,7 +37,7 @@
         throw new Error('Unauthorized: No token found');
       }
 
-      const response = await axios.get('https://capstone24.sit.kmutt.ac.th/un3/api/reviews', {
+      const response = await axios.get('http://localhost:3000/reviews', {
         headers: {
           Authorization: `Bearer ${token}`, // ส่ง Token ใน Header
         },
@@ -95,7 +95,7 @@
         const token = localStorage.getItem('token');
         if (!token) throw new Error('Unauthorized: No token found');
 
-        await axios.delete(`https://capstone24.sit.kmutt.ac.th/un3/api/reviews/${deleteId.value}`, {
+        await axios.delete(`http://localhost:3000/reviews/${deleteId.value}`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
