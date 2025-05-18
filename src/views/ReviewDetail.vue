@@ -132,6 +132,16 @@ onMounted(() => {
   fetchReview();
   fetchComments();
 });
+// profileImageUrl receive user.image from localStorage
+
+const profileImageUrl = computed(() => {
+  const filename = user.value?.image || '';
+  if (filename && filename !== 'null' && filename !== 'undefined') {
+    // ป้องกัน cache และตรวจรูปได้ทันทีหลัง upload
+    return `http://localhost:9000/iterninsight/${filename}?t=${Date.now()}`;
+  }
+  return null;
+});
 
 </script>
 
@@ -173,7 +183,12 @@ onMounted(() => {
       <div class="flex items-center gap-2 mb-4">
         <div
           class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-white font-bold uppercase text-xl">
-          {{ user?.name?.charAt(0) || '?' }}
+          <template v-if="profileImageUrl">
+            <img :src="profileImageUrl" alt="Profile" class="w-full h-full object-cover" />
+          </template>
+          <template v-else>
+            {{ user?.name?.charAt(0) || '?' }}
+          </template>
         </div>
         <div>
           <strong class="text-hightlight  text-xl">{{ user?.name || 'Unknown' }}</strong>
@@ -194,34 +209,28 @@ onMounted(() => {
 
     <div v-for="cmt in comments" :key="cmt.id" class="mb-4 border rounded-lg p-4 ">
       <div class="flex justify-between items-start mb-1">
-<!-- Commenter Info + Hover Popup -->
-<div
-  v-if="cmt.user"
-  class="relative inline-block"
-  @mouseenter="hoveredUserId = cmt.user.id"
-  @mouseleave="hoveredUserId = null"
->
-  <router-link :to="`/users/${cmt.user.id}`" class="flex items-center gap-2 group cursor-pointer">
-    <div class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-white font-bold uppercase text-xl">
-      {{ cmt.user?.name?.charAt(0) || '?' }}
-    </div>
-    <div>
-      <strong class="text-xl text-hightlight group-hover:underline">
-        {{ cmt.user?.name || 'Unknown' }}
-      </strong>
-      <div class="text-sm text-gray-400">
-        {{ formatDate(cmt.date) }}
-      </div>
-    </div>
-  </router-link>
+        <!-- Commenter Info + Hover Popup -->
+        <div v-if="cmt.user" class="relative inline-block" @mouseenter="hoveredUserId = cmt.user.id"
+          @mouseleave="hoveredUserId = null">
+          <router-link :to="`/users/${cmt.user.id}`" class="flex items-center gap-2 group cursor-pointer">
+            <div
+              class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-white font-bold uppercase text-xl">
+              <img :src="cmt.user?.image?.startsWith('http') ? cmt.user.image : `http://localhost:9000/iterninsight/${cmt.user.image}`"
+                alt="Profile" class="w-10 h-10 rounded-full object-cover" />
+            </div>
+            <div>
+              <strong class="text-xl text-hightlight group-hover:underline">
+                {{ cmt.user?.name || 'Unknown' }}
+              </strong>
+              <div class="text-sm text-gray-400">
+                {{ formatDate(cmt.date) }}
+              </div>
+            </div>
+          </router-link>
 
-  <!-- ✅ Popup only on hover -->
-  <HoverPopup
-    v-if="hoveredUserId === cmt.user.id"
-    :user="cmt.user"
-    class="absolute top-full left-0 z-50"
-  />
-</div>
+          <!-- ✅ Popup only on hover -->
+          <HoverPopup v-if="hoveredUserId === cmt.user.id" :user="cmt.user" class="absolute top-full left-0 z-50" />
+        </div>
 
 
 
@@ -281,4 +290,3 @@ onMounted(() => {
     </div>
   </div>
 </template>
-

@@ -2,6 +2,7 @@
 import { computed, ref, onMounted } from 'vue'
 import axios from 'axios'
 import Filter from '../components/FilterComp.vue'
+import { fa } from 'vuetify/locale'
 
 interface Company {
   id: number
@@ -18,6 +19,7 @@ interface Post {
   startDate: Date | null
   endDate: Date
   company: Company
+  isBookmarked?: boolean
 }
 
 // Declare posts array and loading state
@@ -31,7 +33,11 @@ const endDateSelected = ref('') // end date filter
 const fetchData = async () => {
   try {
     const response = await axios.get<Post[]>('http://localhost:3000/posts')
-    // Flatten the data by extracting the companyName
+
+    // เตรียม token ไว้ใช้สำหรับตรวจสอบ bookmark
+    const token = localStorage.getItem('token')
+
+    // สร้าง post object เบื้องต้นก่อนอัปเดต bookmark
     posts.value = response.data.map((post) => ({
       id: post.id,
       title: post.title,
@@ -44,7 +50,35 @@ const fetchData = async () => {
         id: post.company.id,
         companyName: post.company.companyName,
       },
+      isBookmarked: false, // ตั้งค่าเริ่มต้น
     }))
+
+    // ถ้ามี token ให้เรียกหาสถานะ bookmark
+    if (token) {
+      const bookmarkStatuses = await Promise.all(
+        posts.value.map(async (post) => {
+          try {
+            const res = await axios.get(`http://localhost:3000/posts/${post.id}/bookmark`, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            })
+            return res.data.data === true
+          } catch (err) {
+            console.warn(`Failed to fetch bookmark for post ${post.id}`, err)
+            return false
+          }
+        })
+      )
+      // print all bookmark statuses
+      // console.log('Bookmark statuses:', bookmarkStatuses)
+
+      // อัปเดต isBookmarked ตามผลลัพธ์
+      posts.value = posts.value.map((post, index) => ({
+        ...post,
+        isBookmarked: bookmarkStatuses[index],
+      }))
+    }
   } catch (error) {
     console.error('Error fetching data', error)
   } finally {
@@ -52,7 +86,33 @@ const fetchData = async () => {
   }
 }
 
-onMounted(fetchData)
+
+
+const toggleBookmark = async (post: Post) => {
+  const token = localStorage.getItem('token')
+  if (!token) return alert('Please login first')
+
+  try {
+    await axios({
+      method: post.isBookmarked ? 'DELETE' : 'POST',
+      url: `http://localhost:3000/posts/${post.id}/bookmark`,
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+
+    // สลับสถานะหลังจากสำเร็จ
+    post.isBookmarked = !post.isBookmarked
+  } catch (error) {
+    console.error('Bookmark operation failed:', error)
+  }
+}
+
+
+onMounted(async () => {
+  await fetchData()
+  // await fetchBookmarks()
+})
 
 // Filtered reviews based on search keyword, selected position, and date range
 const filteredReviews = computed(() => {
@@ -76,69 +136,54 @@ const filteredReviews = computed(() => {
   });
 });
 
-
-
 const positions = computed(() => {
   const allPositions = posts.value.flatMap((post) => post.position);
   const uniquePositions = new Set(allPositions); // This ensures only unique positions
   return Array.from(uniquePositions);
 });
-
 </script>
 
 <template>
-  <Filter
-    class="my-2"
-    @updateSearch="searchKeyword = $event"
-    @updatePosition="selectedPosition = $event" 
-    @updateStartDate="startDateSelected = $event"
-    @updateEndDate="endDateSelected = $event"
-    :positions="positions"
-  />
-  <div
-    class="font-Prompt px-2 mt-2 space-y-2 w-full sm:px-12 md:px-16 lg:px-32 lg:py-4 xl:px-56 2xl:px-96"
-  >
+  <Filter class="my-2" @updateSearch="searchKeyword = $event" @updatePosition="selectedPosition = $event"
+    @updateStartDate="startDateSelected = $event" @updateEndDate="endDateSelected = $event" :positions="positions" />
+
+  <div class="font-Prompt px-2 mt-2 space-y-2 w-full sm:px-12 md:px-16 lg:px-32 lg:py-4 xl:px-56 2xl:px-96">
     <div v-if="isLoading" class="text-center">Loading...</div>
-    <!-- Show "Post not found" if there are no filtered posts -->
-    <div
-      v-if="filteredReviews.length === 0 && !isLoading"
-      class="text-center text-lg text-gray-500"
-    >
+
+    <div v-if="filteredReviews.length === 0 && !isLoading" class="text-center text-lg text-gray-500">
       Post not found
     </div>
 
-    <!-- Check if posts array has data before rendering the first and second post -->
-    <div v-if="filteredReviews.length > 0">
-      <RouterLink
-        :to="`posts/${filteredReviews[0].id}`"
-        class="flex flex-row border border-border gap-x-4 pr-4 items-start h-full"
-      >
-        <img
-          src="http://localhost:9000/iterninsight/33ba28852218564451f9b6ef0d8d1ca1.png"
-          alt="Post Image"
-          class="bg-gray-200 w-[120px] aspect-[3/2] border-r border-border md:w-[200px] lg:w-[280px] xl:w-[320px] 2xl:w-[400px]"
-        />
+    <div v-if="filteredReviews.length > 0" class="relative">
+      <RouterLink :to="`posts/${filteredReviews[0].id}`"
+        class="flex flex-row border border-border gap-x-4 pr-4 items-start h-full relative">
+        <img src="http://localhost:9000/iterninsight/33ba28852218564451f9b6ef0d8d1ca1.png"
+          class="bg-gray-200 w-[120px] aspect-[3/2] border-r border-border md:w-[200px] lg:w-[280px] xl:w-[320px] 2xl:w-[400px]" />
         <div class="flex flex-col gap-y-1 w-full py-2 xl:gap-y-2">
           <div class="text-hightlight font-bold text-sm w-full md:text-lg lg:text-xl">
             {{ filteredReviews[0].title }}
           </div>
+          <p class="text-xs text-gray-600 line-clamp-3 md:text-sm lg:text-base">
+            {{ filteredReviews[0].description }}
+          </p>
           <span class="text-subtext text-xs md:text-base lg:text-lg">
             {{ filteredReviews[0].subtitle }}
           </span>
           <button
-            class="hidden mt-2 text-xs font-medium text-white w-fit bg-gradient-to-b from-button to-button/40 px-4 py-1 rounded-lg border-border border shadow-sm md:block md:text-sm lg:text-base"
-          >
+            class="hidden mt-2 text-xs font-medium text-white w-fit bg-gradient-to-b from-button to-button/40 px-4 py-1 rounded-lg border-border border shadow-sm md:block md:text-sm lg:text-base">
             Read more
           </button>
         </div>
       </RouterLink>
+      <button @click.stop.prevent="toggleBookmark(filteredReviews[0])" class="absolute top-2 right-2 z-10">
+        <img :src="filteredReviews[0].isBookmarked ? '/bookmark-filled.png' : '/bookmark-outline.png'"
+          class="w-6 h-6" />
+      </button>
     </div>
 
-    <div v-if="filteredReviews.length > 1">
-      <RouterLink
-        :to="`posts/${filteredReviews[1].id}`"
-        class="flex flex-row border border-border gap-x-4 pl-4 items-start"
-      >
+    <div v-if="filteredReviews.length > 1" class="relative">
+      <RouterLink :to="`posts/${filteredReviews[1].id}`"
+        class="flex flex-row border border-border gap-x-4 pl-4 items-start relative">
         <div class="flex flex-col gap-y-1 w-full py-2 xl:gap-y-2">
           <div class="text-hightlight font-bold text-sm md:text-lg lg:text-xl">
             {{ filteredReviews[1].title }}
@@ -147,42 +192,39 @@ const positions = computed(() => {
             {{ filteredReviews[1].subtitle }}
           </span>
           <button
-            class="hidden mt-2 text-xs font-medium text-white w-fit bg-gradient-to-b from-button to-button/40 px-4 py-1 rounded-lg border-border border shadow-sm md:block md:text-sm lg:text-base"
-          >
+            class="hidden mt-2 text-xs font-medium text-white w-fit bg-gradient-to-b from-button to-button/40 px-4 py-1 rounded-lg border-border border shadow-sm md:block md:text-sm lg:text-base">
             Read more
           </button>
         </div>
-        <img
-          src="http://localhost:9000/iterninsight/9f349a52e3642853ef6756f52f75cd90.png"
-          alt=""
-          class="bg-gray-200 w-[120px] aspect-[3/2] border-r border-border md:w-[200px] lg:w-[280px] xl:w-[320px] 2xl:w-[400px]"
-        />
+        <img src="http://localhost:9000/iterninsight/9f349a52e3642853ef6756f52f75cd90.png"
+          class="bg-gray-200 w-[120px] aspect-[3/2] border-r border-border md:w-[200px] lg:w-[280px] xl:w-[320px] 2xl:w-[400px]" />
       </RouterLink>
+      <button @click.stop.prevent="toggleBookmark(filteredReviews[1])" class="absolute top-2 right-2 z-10">
+        <img :src="filteredReviews[1].isBookmarked ? '/bookmark-filled.png' : '/bookmark-outline.png'"
+          class="w-6 h-6" />
+      </button>
     </div>
 
-    <!-- Only render posts starting from index 2 if there are more than 2 posts -->
     <div v-if="filteredReviews.length > 2">
       <h1 class="text-hightlight font-bold flex items-center md:text-lg lg:text-xl">
         Other Announce
         <span class="relative inline-flex ml-2">
-          <span
-            class="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-primary -top-1"
-          ></span>
+          <span class="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-primary -top-1"></span>
           <span class="relative inline-flex h-2 w-2 rounded-full bg-primary -top-1"></span>
         </span>
       </h1>
-      <div
-        v-for="(post, index) in filteredReviews.slice(2)"
-        :key="index"
-        class="flex flex-row justify-between items-center font-Prompt border-border border-b py-2"
-      >
+      <div v-for="(post, index) in filteredReviews.slice(2)" :key="index"
+        class="flex flex-row justify-between items-center font-Prompt border-border border-b py-2 relative">
         <span class="text-sm md:text-base lg:text-lg"> {{ post.title }} </span>
-        <RouterLink
-          :to="`posts/${post.id}`"
-          class="text-xs font-medium text-white bg-gradient-to-b from-button to-button/20 px-4 py-1 rounded-lg border-border border shadow-sm md:text-sm lg:text-base"
-        >
-          Read more
-        </RouterLink>
+        <div class="flex items-center gap-2">
+          <button @click.stop.prevent="toggleBookmark(post)">
+            <img :src="post.isBookmarked ? '/bookmark-filled.png' : '/bookmark-outline.png'" class="w-5 h-5" />
+          </button>
+          <RouterLink :to="`posts/${post.id}`"
+            class="text-xs font-medium text-white bg-gradient-to-b from-button to-button/20 px-4 py-1 rounded-lg border-border border shadow-sm md:text-sm lg:text-base">
+            Read more
+          </RouterLink>
+        </div>
       </div>
     </div>
   </div>

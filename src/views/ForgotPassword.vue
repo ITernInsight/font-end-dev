@@ -146,13 +146,6 @@ const resetPassword = async () => {
 
   </div>
 
-
-
-
-
-
-
-
 </template>
 
 <style scoped></style>

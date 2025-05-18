@@ -28,10 +28,13 @@ const handleLogin = async () => {
     });
 
     const { access_token, user } = response.data;
+    console.log('User role:', user.role);
+
 
     localStorage.setItem('token', access_token);
     localStorage.setItem('user', JSON.stringify(user));
 
+    
     window.dispatchEvent(new Event('user-logged-in'));
 
     if (rememberMe.value) {

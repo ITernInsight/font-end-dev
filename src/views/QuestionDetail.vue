@@ -169,6 +169,15 @@ onMounted(() => {
   fetchComments();
 });
 
+const profileImageUrl = computed(() => {
+  const filename = user.value?.image || '';
+  if (filename && filename !== 'null' && filename !== 'undefined') {
+    // ป้องกัน cache และตรวจรูปได้ทันทีหลัง upload
+    return `http://localhost:9000/iterninsight/${filename}?t=${Date.now()}`;
+  }
+  return null;
+});
+
 const fullPath = computed(() => route.fullPath)
 </script>
 
@@ -210,7 +219,12 @@ const fullPath = computed(() => route.fullPath)
       <div class="flex items-center gap-2 mb-4">
         <div
           class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-white font-bold uppercase text-xl">
-          {{ user?.name?.charAt(0) || '?' }}
+          <template v-if="profileImageUrl">
+            <img :src="profileImageUrl" alt="Profile" class="w-full h-full object-cover" />
+          </template>
+          <template v-else>
+            {{ user?.name?.charAt(0) || '?' }}
+          </template>
         </div>
         <div>
           <strong class="text-xl">{{ user?.name || 'Unknown' }}</strong>
@@ -236,7 +250,8 @@ const fullPath = computed(() => route.fullPath)
           class="flex items-center gap-2 group">
           <div
             class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-white font-bold uppercase text-xl">
-            {{ cmt.user?.name?.charAt(0) || '?' }}
+            <img :src="cmt.user?.image?.startsWith('http') ? cmt.user.image : `http://localhost:9000/iterninsight/${cmt.user.image}`"
+            alt="Profile" class="w-10 h-10 rounded-full object-cover" />
           </div>
           <div>
             <strong class="text-xl text-hightlight group-hover:underline">

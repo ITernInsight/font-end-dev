@@ -9,6 +9,7 @@ interface UserData {
   email: string
   phone: string
   position: string
+  description?: string 
   photoUrl: string
   image?: string;
   
@@ -22,7 +23,9 @@ const defaultUserData: UserData = {
   email: '',
   phone: '',
   position: '',
-  photoUrl: ''
+  photoUrl: '',
+  description: '',
+  image: ''
 }
 
 const user = ref<UserData>({ ...defaultUserData })
@@ -49,7 +52,11 @@ const saveAll = async () => {
     const id = user.value.id
     if (!token || !id) throw new Error('No token or user ID found.')
     // uploadFile() // upload file first
-    const respond = uploadFile()
+    // if selectedFile.value is not null, upload it
+    if (selectedFile.value) {
+      await uploadFile()
+    }
+    // const respond = uploadFile()
     await axios.put(`http://localhost:3000/users/${id}`, user.value, {
       headers: { Authorization: `Bearer ${token}` }
     })
@@ -57,6 +64,9 @@ const saveAll = async () => {
     originalUser.value = { ...user.value }
     localStorage.setItem('user', JSON.stringify(user.value))
     window.dispatchEvent(new Event('user-logged-in'))
+
+    // go back to last page
+    router.back()
   } catch (err: any) {
     const message = err.response?.data?.message || err.message
     if (message.includes('entity too large')) {
@@ -138,7 +148,7 @@ const uploadFile = async () => {
     window.dispatchEvent(new Event('user-logged-in'));
     // router.push('/posts');
     alert('Upload successful!');
-    router.push('/posts');
+
 
   } catch (error) {
     console.error('Upload failed:', error);
@@ -158,8 +168,32 @@ const profileImageUrl = computed(() => {
   return 'https://cdn-icons-png.flaticon.com/512/1144/1144760.png';
 });
 
+// // delete image
+// const deleteImage = async () => {
+//   try {
+//     const token = localStorage.getItem('token')
+//     const id = user.value.id
+//     if (!token || !id) throw new Error('No token or user ID found.')
 
+//     await axios.post(`http://localhost:3000/login/delete_image`, {
+//       email: user.value.email,
+//       imageUrl: user.value.image
+//     }, {
+//       headers: { Authorization: `Bearer ${token}` }
+//     })
 
+//     // remove image from local storage
+//     const stored = localStorage.getItem('user');
+//     if (stored) {
+//       const parsedUser = JSON.parse(stored);
+//       parsedUser.image = null;
+//       localStorage.setItem('user', JSON.stringify(parsedUser));
+//     }
+
+//     window.dispatchEvent(new Event('user-logged-in'));
+//   } catch (err) {
+//     console.error(err)
+//   }
 
 </script>
 
@@ -191,7 +225,7 @@ const profileImageUrl = computed(() => {
       <!-- ข้อมูลโปรไฟล์ -->
       <div class="space-y-4">
         <div
-          v-for="field in ['name', 'email', 'phone', 'position']"
+          v-for="field in ['name', 'email', 'phone', 'position', 'description']"
           :key="field"
           class="flex justify-between items-center border-b pb-2"
         >
@@ -221,7 +255,7 @@ const profileImageUrl = computed(() => {
           Save
         </button>
         <button
-          @click="$router.push('/posts')"
+          @click="$router.back()"
           class="px-6 py-2 rounded text-white bg-red-500 hover:bg-red-600"
         >
           Cancel

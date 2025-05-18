@@ -16,6 +16,8 @@ function handleLogin() {
 }
 
 function handleLogout() {
+  // refresh the page to update the login status
+  window.location.reload();
   isLoggedIn.value = false;
 }
 
