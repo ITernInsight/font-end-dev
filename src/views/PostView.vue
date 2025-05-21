@@ -3,6 +3,42 @@ import { computed, ref, onMounted } from 'vue'
 import axios from 'axios'
 import Filter from '../components/FilterComp.vue'
 import { fa } from 'vuetify/locale'
+import { RouterLink } from 'vue-router'
+import { useRoute } from 'vue-router'
+import iconfilled from '../assets/bookmark-filled.png'
+import iconout from '@/assets/bookmark-outline.png'
+
+
+const route = useRoute()
+const isBookmarkView = ref(false)
+
+
+
+
+const fetchBookmarkedPosts = async () => {
+  try {
+    isLoading.value = true
+    const response = await axios.get<Post[]>('http://localhost:3000/posts')
+    posts.value = response.data
+      .filter((post) => post.isBookmarked)
+      .map((post) => ({
+        id: post.id,
+        title: post.title,
+        subtitle: post.subtitle,
+        description: post.description,
+        position: post.position,
+        startDate: post.startDate ? new Date(post.startDate) : null,
+        endDate: new Date(post.endDate),
+        company: post.company,
+        isBookmarked: post.isBookmarked,
+      }))
+  } catch (error) {
+    console.error('Error fetching bookmarked posts:', error)
+  } finally {
+    isLoading.value = false
+  }
+}
+
 
 interface Company {
   id: number
@@ -103,6 +139,10 @@ const toggleBookmark = async (post: Post) => {
 
     // สลับสถานะหลังจากสำเร็จ
     post.isBookmarked = !post.isBookmarked
+    // ลบออกจากลิสต์ถ้าอยู่ในหน้า bookmarked
+    if (isBookmarkView.value && !post.isBookmarked) {
+      posts.value = posts.value.filter((p) => p.id !== post.id)
+    }
   } catch (error) {
     console.error('Bookmark operation failed:', error)
   }
@@ -111,6 +151,11 @@ const toggleBookmark = async (post: Post) => {
 
 onMounted(async () => {
   await fetchData()
+  if (route.query.bookmarked === 'true') {
+    isBookmarkView.value = true
+    fetchBookmarkedPosts()
+    return
+  }
   // await fetchBookmarks()
 })
 
@@ -141,13 +186,73 @@ const positions = computed(() => {
   const uniquePositions = new Set(allPositions); // This ensures only unique positions
   return Array.from(uniquePositions);
 });
+
+onMounted(async () => {
+  const token = localStorage.getItem('token')
+  try {
+    if (route.query.bookmarked === 'true') {
+      // ✅ ดึงเฉพาะโพสต์ที่ผู้ใช้ bookmark ไว้
+      const res = await axios.get('http://localhost:3000/posts/bookmarks/me', {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
+
+      // ตรวจสอบว่า res.data เป็น array
+      if (Array.isArray(res.data)) {
+        posts.value = res.data.map(post => ({
+          ...post,
+          isBookmarked: true
+        }))
+      } else {
+        posts.value = []
+      }
+
+    } else {
+      // ✅ ดึงโพสต์ทั้งหมด และกำหนด isBookmarked จากข้อมูล likes[]
+      await fetchData()
+    }
+  } catch (error) {
+    console.error('Error loading posts:', error)
+    posts.value = [] // ป้องกันการแสดงโพสต์ค้างถ้าโหลดไม่สำเร็จ
+  } finally {
+    isLoading.value = false
+  }
+})
+
+
 </script>
 
 <template>
   <Filter class="my-2" @updateSearch="searchKeyword = $event" @updatePosition="selectedPosition = $event"
     @updateStartDate="startDateSelected = $event" @updateEndDate="endDateSelected = $event" :positions="positions" />
 
-  <div class="font-Prompt px-2 mt-2 space-y-2 w-full sm:px-12 md:px-16 lg:px-32 lg:py-4 xl:px-56 2xl:px-96">
+  <!-- ✅ ส่วนแสดงโพสต์ที่ bookmark -->
+  <div v-if="route.query.bookmarked === 'true'"
+    class="font-Prompt px-2 mt-2 space-y-2 w-full sm:px-12 md:px-16 lg:px-32 lg:py-4 xl:px-56 2xl:px-96">
+    <h2 class="text-xl font-bold">Saved Posts</h2>
+    <div v-if="posts.length === 0" class="text-center text-gray-500">No bookmarks found.</div>
+
+    <template v-for="post in posts" :key="post.id">
+      <div v-if="post.isBookmarked"
+        class="flex flex-row justify-between items-center font-Prompt border-border border-b py-2 relative">
+        <span class="text-sm md:text-base lg:text-lg"> {{ post.title }} </span>
+        <div class="flex items-center gap-2">
+          <button @click.stop.prevent="toggleBookmark(post)">
+            <img :src="iconfilled" class="w-5 h-5" />
+          </button>
+
+          <RouterLink :to="`posts/${post.id}`"
+            class="text-xs font-medium text-white bg-gradient-to-b from-button to-button/20 px-4 py-1 rounded-lg border-border border shadow-sm md:text-sm lg:text-base">
+            Read more
+          </RouterLink>
+        </div>
+      </div>
+    </template>
+  </div>
+
+
+  <div v-else class="font-Prompt px-2 mt-2 space-y-2 w-full sm:px-12 md:px-16 lg:px-32 lg:py-4 xl:px-56 2xl:px-96">
     <div v-if="isLoading" class="text-center">Loading...</div>
 
     <div v-if="filteredReviews.length === 0 && !isLoading" class="text-center text-lg text-gray-500">
@@ -176,8 +281,7 @@ const positions = computed(() => {
         </div>
       </RouterLink>
       <button @click.stop.prevent="toggleBookmark(filteredReviews[0])" class="absolute top-2 right-2 z-10">
-        <img :src="filteredReviews[0].isBookmarked ? '/bookmark-filled.png' : '/bookmark-outline.png'"
-          class="w-6 h-6" />
+        <img :src="filteredReviews[0].isBookmarked ? iconfilled : iconout" class="w-6 h-6" />
       </button>
     </div>
 
@@ -200,8 +304,7 @@ const positions = computed(() => {
           class="bg-gray-200 w-[120px] aspect-[3/2] border-r border-border md:w-[200px] lg:w-[280px] xl:w-[320px] 2xl:w-[400px]" />
       </RouterLink>
       <button @click.stop.prevent="toggleBookmark(filteredReviews[1])" class="absolute top-2 right-2 z-10">
-        <img :src="filteredReviews[1].isBookmarked ? '/bookmark-filled.png' : '/bookmark-outline.png'"
-          class="w-6 h-6" />
+        <img :src="filteredReviews[1].isBookmarked ? iconfilled : iconout" class="w-6 h-6" />
       </button>
     </div>
 
@@ -218,7 +321,7 @@ const positions = computed(() => {
         <span class="text-sm md:text-base lg:text-lg"> {{ post.title }} </span>
         <div class="flex items-center gap-2">
           <button @click.stop.prevent="toggleBookmark(post)">
-            <img :src="post.isBookmarked ? '/bookmark-filled.png' : '/bookmark-outline.png'" class="w-5 h-5" />
+            <img :src="post.isBookmarked ? iconfilled : iconout" class="w-5 h-5" />
           </button>
           <RouterLink :to="`posts/${post.id}`"
             class="text-xs font-medium text-white bg-gradient-to-b from-button to-button/20 px-4 py-1 rounded-lg border-border border shadow-sm md:text-sm lg:text-base">

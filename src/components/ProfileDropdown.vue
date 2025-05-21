@@ -13,7 +13,7 @@ const isLoggedIn = ref(false);
 
 const logout = () => {
   localStorage.removeItem('user');
-  localStorage.removeItem('token'); 
+  localStorage.removeItem('token');
   isLoggedIn.value = false;
   window.dispatchEvent(new Event('user-logged-out'));
   router.push('/posts');
@@ -52,6 +52,8 @@ const goToEditProfile = () => {
   router.push('/edit-profile');
 };
 
+
+
 // ✅ เพิ่ม computed สำหรับ URL ของรูป
 const profileImageUrl = computed(() => {
   const filename = user.value?.image || '';
@@ -70,14 +72,10 @@ const profileImageUrl = computed(() => {
 
 <template>
   <div v-if="isLoggedIn" class="relative">
-    <div
-      class="flex items-center gap-2 cursor-pointer"
-      @click.stop="showMenu = !showMenu"
-    >
+    <div class="flex items-center gap-2 cursor-pointer" @click.stop="showMenu = !showMenu">
       <span class="font-semibold hidden sm:inline text-white text-xl">{{ user?.name }}</span>
       <div
-        class="w-8 h-8 rounded-full bg-white text-primary font-bold flex items-center justify-center uppercase overflow-hidden"
-      >
+        class="w-8 h-8 rounded-full bg-white text-primary font-bold flex items-center justify-center uppercase overflow-hidden">
         <!-- ✅ เปลี่ยนเป็นใช้ computed profileImageUrl -->
         <template v-if="profileImageUrl">
           <img :src="profileImageUrl" alt="Profile" class="w-full h-full object-cover" />
@@ -89,19 +87,15 @@ const profileImageUrl = computed(() => {
     </div>
 
     <!-- Dropdown -->
-    <div
-      v-if="showMenu"
-      class="absolute right-0 mt-2 bg-white rounded-lg shadow-lg w-64 p-4 z-50 text-black"
-      @click.stop
-    >
+    <div v-if="showMenu" class="absolute right-0 mt-2 bg-white rounded-lg shadow-lg w-64 p-4 z-50 text-black"
+      @click.stop>
       <!-- ลูกศรชี้ -->
       <div class="absolute -top-2 right-4 w-4 h-4 bg-white transform rotate-45 shadow-md"></div>
 
       <!-- ข้อมูลผู้ใช้ -->
       <div class="flex items-center gap-3 mb-3">
         <div
-          class="w-12 h-12 rounded-full bg-white text-primary font-bold flex items-center justify-center uppercase border-2 border-primary overflow-hidden"
-        >
+          class="w-12 h-12 rounded-full bg-white text-primary font-bold flex items-center justify-center uppercase border-2 border-primary overflow-hidden">
           <!-- ✅ ใช้ profileImageUrl อีกจุด -->
           <template v-if="profileImageUrl">
             <img :src="profileImageUrl" alt="Profile" class="w-full h-full object-cover" />
@@ -120,24 +114,27 @@ const profileImageUrl = computed(() => {
 
       <!-- เมนู -->
       <div class="flex flex-col gap-2">
-        <button
-          class="flex items-center gap-2 text-primary hover:underline"
-          @click="goToEditProfile"
-        >
+        <button class="flex items-center gap-2 text-primary hover:underline" @click="goToEditProfile">
           <img :src="editIcon" alt="Edit" class="w-5 h-5" />
           Edit Profile
         </button>
-        <button
-          class="flex items-center gap-2 text-red-600 hover:underline"
-          @click="logout"
-        >
+        <RouterLink
+  :to="{ path: '/posts', query: { bookmarked: 'true' } }"
+  class="dropdown-item flex items-center gap-2 text-primary hover:underline"
+>
+  <img src="../assets/bookmark.png" width="18" height="18" />
+  <span>Saved</span>
+</RouterLink>
+
+        <button class="flex items-center gap-2 text-red-600 hover:underline" @click="logout">
           <img :src="logoutIcon" alt="Logout" class="w-5 h-5" />
           Logout
         </button>
       </div>
+
+
     </div>
   </div>
 </template>
 
-<style scoped>
-</style>
+<style scoped></style>

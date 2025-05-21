@@ -25,7 +25,6 @@ import Register from '../views/Register.vue'
 import ViewUserProfile from '@/views/ViewUserProfile.vue'
 import ForgotPassword from '@/views/ForgotPassword.vue'
 
-
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -87,14 +86,13 @@ const router = createRouter({
         {
           path: 'review/:id',
           name: 'review details',
-          component: DetailReview, 
+          component: DetailReview,
         },
         {
           path: 'question/:id',
           name: 'detail question',
-          component: DetailQuestion, 
+          component: DetailQuestion,
         },
-
       ],
     },
     {
@@ -149,7 +147,7 @@ const router = createRouter({
       name: 'edit question (user)',
       component: EditQuestion,
     },
-    
+
     {
       path: '/login',
       name: 'login',
@@ -168,18 +166,13 @@ const router = createRouter({
     {
       path: '/users/:id',
       name: 'ViewUserProfile',
-      component: ViewUserProfile
+      component: ViewUserProfile,
     },
     {
       path: '/ForgotPassword',
       name: 'ForgotPassword',
       component: ForgotPassword,
     },
-    
- 
-  
-
-
   ],
 })
 
