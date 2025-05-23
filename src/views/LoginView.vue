@@ -5,6 +5,7 @@ import axios from 'axios';
 import viewIcon from '@/assets/view.png'
 import hideIcon from '@/assets/hide.png'
 
+
 const router = useRouter();
 
 const username = ref('');
@@ -34,7 +35,7 @@ const handleLogin = async () => {
     localStorage.setItem('token', access_token);
     localStorage.setItem('user', JSON.stringify(user));
 
-    
+
     window.dispatchEvent(new Event('user-logged-in'));
 
     if (rememberMe.value) {
@@ -142,26 +143,15 @@ onMounted(() => {
           <!-- Username -->
           <div class="relative">
             <label class="text-xs font-medium text-gray-600">Username</label>
-            <input
-              type="text"
-              v-model="username"
-              @focus="showSuggestions = true"
-              @input="filterSuggestions"
-              @blur="hideSuggestions"
-              placeholder="johndoe123"
+            <input type="text" v-model="username" @focus="showSuggestions = true" @input="filterSuggestions"
+              @blur="hideSuggestions" placeholder="johndoe123"
               class="w-full border-b border-gray-300 focus:outline-none focus:border-teal-600 text-sm py-1.5"
-              required
-            />
-            <ul
-              v-if="showSuggestions && filteredUsers.length"
-              class="absolute bg-white shadow w-full rounded z-10 max-h-40 overflow-y-auto"
-            >
-              <li
-                v-for="u in filteredUsers"
-                :key="u.username"
+              required />
+            <ul v-if="showSuggestions && filteredUsers.length"
+              class="absolute bg-white shadow w-full rounded z-10 max-h-40 overflow-y-auto">
+              <li v-for="u in filteredUsers" :key="u.username"
                 @mousedown.prevent="selectUsername(u.username, u.password)"
-                class="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-              >
+                class="px-4 py-2 hover:bg-gray-100 cursor-pointer">
                 {{ u.username }}
               </li>
             </ul>
@@ -170,13 +160,9 @@ onMounted(() => {
           <!-- Password -->
           <div class="relative">
             <label class="text-xs font-medium text-gray-600">Password</label>
-            <input
-              :type="showPassword ? 'text' : 'password'"
-              v-model="password"
-              placeholder="********"
+            <input :type="showPassword ? 'text' : 'password'" v-model="password" placeholder="********"
               class="w-full border-b border-gray-300 focus:outline-none focus:border-teal-600 text-sm py-1.5 pr-10"
-              required
-            />
+              required />
             <button type="button" @click="showPassword = !showPassword"
               class="absolute right-2 top-1/2 -translate-y-1/2">
               <img :src="showPassword ? hideIcon : viewIcon" class="w-5 h-5" alt="toggle password" />
@@ -191,10 +177,8 @@ onMounted(() => {
           </div>
 
           <!-- Login button -->
-          <button
-            type="submit"
-            class="w-full bg-gradient-to-b from-button to-button/50 text-white px-4 py-2 rounded-full shadow-lg transition duration-150 ease-in-out"
-          >
+          <button type="submit"
+            class="w-full bg-gradient-to-b from-button to-button/50 text-white px-4 py-2 rounded-full shadow-lg transition duration-150 ease-in-out">
             LOG IN
           </button>
 
@@ -220,7 +204,8 @@ onMounted(() => {
         <h3 class="text-lg font-bold mb-4 text-center text-red-600">Login Failed</h3>
         <p class="text-center text-gray-700 mb-6">{{ errorMessage }}</p>
         <div class="flex justify-center">
-          <button @click="closeErrorModal" class="bg-teal-600 text-white px-6 py-2 rounded hover:bg-teal-700">OK</button>
+          <button @click="closeErrorModal"
+            class="bg-teal-600 text-white px-6 py-2 rounded hover:bg-teal-700">OK</button>
         </div>
       </div>
     </div>

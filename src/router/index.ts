@@ -173,6 +173,16 @@ const router = createRouter({
       name: 'ForgotPassword',
       component: ForgotPassword,
     },
+    {
+  path: '/404',
+  name: 'NotFound',
+  component: () => import('@/views/NotFound.vue'),
+},
+{
+  path: '/:catchAll(.*)', // fallback
+  redirect: '/404',
+},
+
   ],
 })
 

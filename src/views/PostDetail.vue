@@ -1,7 +1,24 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
 import axios from 'axios'
+import { useRouter, useRoute } from 'vue-router'
+
+const router = useRouter()
+
+onMounted(async () => {
+  try {
+    const postId = route.params.id
+    const response = await axios.get(`http://localhost:3000/posts/${postId}`)
+    post.value = response.data
+  } catch (error: any) {
+    if (error.response?.status === 404) {
+      router.replace('/404') // ✅ ใช้ replace แทน push เพื่อไม่ให้กลับมาได้
+    } else {
+      console.error('Unexpected error:', error)
+    }
+  }
+})
+
 
 interface Company {
   id: number;

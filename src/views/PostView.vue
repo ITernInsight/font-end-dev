@@ -4,12 +4,17 @@ import axios from 'axios'
 import Filter from '../components/FilterComp.vue'
 import { fa } from 'vuetify/locale'
 import { RouterLink } from 'vue-router'
-import { useRoute } from 'vue-router'
 import iconfilled from '../assets/bookmark-filled.png'
 import iconout from '@/assets/bookmark-outline.png'
 
+import {  useRoute } from 'vue-router'
 
 const route = useRoute()
+
+
+
+
+
 const isBookmarkView = ref(false)
 
 
@@ -219,7 +224,6 @@ onMounted(async () => {
     isLoading.value = false
   }
 })
-
 
 </script>
 
