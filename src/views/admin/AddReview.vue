@@ -3,7 +3,6 @@ import { ref } from 'vue';
 import axios from 'axios';
 import { useRouter, useRoute } from 'vue-router';
 
-
 const title = ref('');
 const description = ref('');
 const date = ref('');

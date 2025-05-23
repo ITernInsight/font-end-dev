@@ -1,9 +1,9 @@
+
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import axios from 'axios'
 import router from '@/router'
-
 
 interface Company {
   id: number

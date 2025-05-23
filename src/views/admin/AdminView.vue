@@ -1,3 +1,4 @@
+
 <script setup lang="ts">
 import { RouterLink, RouterView, useRoute, useRouter} from 'vue-router'
 import { ref, onMounted, computed } from 'vue'
@@ -16,7 +17,7 @@ const showAddAnnounceButton = computed(() => {
 onMounted(() => {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   if (user.role !== 'admin') {
-    router.push('/403'); 
+    router.push('/403');
   }
 });
 </script>
@@ -35,7 +36,7 @@ onMounted(() => {
       alt=""
       class="relative bg-gray-200 w-full h-fit max-h-[520px]"
     />
-    
+
     <div class="absolute left-16 top-48 text-white z-10 flex flex-row items-start">
       <div class="w-[20px] h-[256px] bg-white mr-4 rounded-sm"></div>
 
@@ -105,7 +106,6 @@ onMounted(() => {
 
     <RouterView />
 
-    
+
   </div>
 </template>
-

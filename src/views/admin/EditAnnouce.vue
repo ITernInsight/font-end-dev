@@ -1,10 +1,10 @@
+
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import axios from 'axios';
 import router from '@/router';
 import { useRoute } from 'vue-router';
 import { AxiosError } from 'axios';
-
 
 interface Company {
   id: number
@@ -22,6 +22,7 @@ interface Post {
   email: string
   tel: string
   company: Company
+
 }
 
 const post = ref<Post | null>(null)
@@ -105,6 +106,7 @@ const EditAnnoucement = async () => {
         tel: tel.value,
         subtitle: subtitle.value,
         companyId: companyId.value,
+        image: 'default.jpg'
       },
       {
         headers: {
@@ -134,6 +136,21 @@ const EditAnnoucement = async () => {
 
 const closeErrorPopup = () => {
   showError.value = false
+}
+
+const selectedImage = ref<File | null>(null)
+
+const handleFileUpload = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  if (target.files && target.files.length > 0) {
+    const file = target.files[0]
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg']
+    if (allowedTypes.includes(file.type)) {
+      selectedImage.value = file
+    } else {
+      alert('Only JPG and PNG files are allowed.')
+    }
+  }
 }
 
 const formatstartDate = (date: Date | null): string | null => {
@@ -277,6 +294,11 @@ const isDropdownOpen = ref(false)
 const toggleDropdown = () => {
   isDropdownOpen.value = !isDropdownOpen.value
 }
+
+
+
+
+
 </script>
 <template>
   <div class="max-w-4xl mx-auto p-4">
@@ -400,6 +422,13 @@ const toggleDropdown = () => {
           />
         </div>
       </div>
+
+
+      <div class="mb-4">
+  <label>Upload Image</label>
+  <input type="file" @change="handleFileUpload" accept="image/*" class="w-full border rounded-lg px-3 py-2" />
+</div>
+
 
       <div class="flex justify-center space-x-4 mt-4">
         <RouterLink

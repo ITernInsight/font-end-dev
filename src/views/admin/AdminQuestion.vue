@@ -4,8 +4,6 @@ import { RouterLink, useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
 import FilterComp from '@/components/FilterComp.vue';
 
-
-// กำหนดประเภทข้อมูลให้กับ questions
 interface Question {
   id: number;
   title: string;
@@ -14,13 +12,12 @@ interface Question {
   position?: string;
 }
 
-const questions = ref<Question[]>([]);  // ใช้ Question แทน any
+const questions = ref<Question[]>([]);
 const route = useRoute();
 const router = useRouter();
 const showModal = ref(false);
 const deleteId = ref<number | null>(null);
 const deleteTitle = ref('');
-// ลบการใช้งาน id ถ้าไม่มีการใช้งาน
 // const id = route.params.id;
 
 // ตัวแปรสำหรับ Search Bar & Date Filter
@@ -140,7 +137,6 @@ const isDropdownOpen = ref(false);
 </script>
 
 
-
 <template>
   <!-- Header Section -->
   <div class="flex flex-row justify-between items-center w-full px-10">
@@ -230,4 +226,3 @@ const isDropdownOpen = ref(false);
     </div>
   </div>
 </template>
-

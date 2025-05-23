@@ -1,10 +1,10 @@
+
 <script setup lang="ts">
 import { computed, ref, onMounted } from 'vue'
 import axios from 'axios'
 import Filter from '../../components/FilterComp.vue'
 import router from '@/router'
 import { AxiosError } from 'axios';
-
 
 interface Company {
   id: number

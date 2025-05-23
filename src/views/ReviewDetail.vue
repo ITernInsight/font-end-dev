@@ -2,49 +2,28 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
-
-
-// Types
-interface User {
-  id: number;
-  name: string;
-}
-
-interface Comment {
-  id: number;
-  text: string;
-  date: string;
-  user: User;
-}
-
-interface Review {
-  id: number;
-  title: string;
-  description?: string;
-  date: string;
-  user?: User;
-  like?: unknown[];
-}
+import HoverPopup from '@/components/HoverPopup.vue';
 
 const route = useRoute();
 const router = useRouter();
 
-const review = ref<Review | null>(null);
-const comments = ref<Comment[]>([]);
+const review = ref(null);
+const comments = ref([]);
 const commentText = ref('');
-const user = ref<User | null>(JSON.parse(localStorage.getItem('user') || 'null'));
+const user = ref(JSON.parse(localStorage.getItem('user')));
 const showModal = ref(false);
-const deleteId = ref<number | null>(null);
+const deleteId = ref(null);
 const deleteTitle = ref('');
-const editCommentId = ref<number | null>(null);
+const editCommentId = ref(null);
 const editText = ref('');
-const deleteCommentId = ref<number | null>(null);
+const deleteCommentId = ref(null);
 const showCommentDelete = ref(false);
-
 const likeCount = computed(() => review.value?.like?.length || 0);
 
+const hoveredUserId = ref(null)
+
 const id = Number(route.params.id);
-const from = (route.query.from as string) || 'user';
+const from = route.query.from || 'user';
 
 const fetchReview = async () => {
   const token = localStorage.getItem('token');
@@ -67,18 +46,14 @@ const submitComment = async () => {
   const token = localStorage.getItem('token');
   const now = new Date();
 
-  const res = await axios.post(
-    `http://localhost:3000/reviews/${id}/comment`,
-    {
-      text: commentText.value,
-      date: now,
-      user: user.value?.id,
-      review: id,
-    },
-    {
-      headers: { Authorization: `Bearer ${token}` },
-    }
-  );
+  const res = await axios.post(`http://localhost:3000/reviews/${id}/comment`, {
+    text: commentText.value,
+    date: now,
+    user: user.value.id,
+    review: id,
+  }, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
 
   if (res.status === 201 || res.status === 200) {
     commentText.value = '';
@@ -86,7 +61,7 @@ const submitComment = async () => {
   }
 };
 
-const startEditComment = (comment: Comment) => {
+const startEditComment = (comment) => {
   editCommentId.value = comment.id;
   editText.value = comment.text;
 };
@@ -98,21 +73,19 @@ const cancelEditComment = () => {
 
 const saveCommentEdit = async () => {
   const token = localStorage.getItem('token');
-  await axios.put(
-    `http://localhost:3000/reviews/${id}/comment/${editCommentId.value}`,
-    {
-      text: editText.value,
-    },
-    {
-      headers: { Authorization: `Bearer ${token}` },
-    }
-  );
+  await axios.put(`http://localhost:3000/reviews/${id}/comment/${editCommentId.value}`, {
+    text: editText.value,
+  }, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+
 
   cancelEditComment();
   await fetchComments();
 };
 
-const confirmDeleteComment = (id: number) => {
+const confirmDeleteComment = (id) => {
   deleteCommentId.value = id;
   showCommentDelete.value = true;
 };
@@ -130,7 +103,7 @@ const cancelDeleteComment = () => {
   showCommentDelete.value = false;
 };
 
-const confirmDelete = (id: number, title: string) => {
+const confirmDelete = (id, title) => {
   deleteId.value = id;
   deleteTitle.value = title;
   showModal.value = true;
@@ -150,7 +123,7 @@ const cancelDelete = () => {
   showModal.value = false;
 };
 
-const formatDate = (dateStr: string): string => {
+const formatDate = (dateStr) => {
   const d = new Date(dateStr);
   return isNaN(d.getTime()) ? 'Invalid Date' : d.toLocaleString();
 };
@@ -159,14 +132,24 @@ onMounted(() => {
   fetchReview();
   fetchComments();
 });
-</script>
+// profileImageUrl receive user.image from localStorage
 
+const profileImageUrl = computed(() => {
+  const filename = user.value?.image || '';
+  if (filename && filename !== 'null' && filename !== 'undefined') {
+    // ป้องกัน cache และตรวจรูปได้ทันทีหลัง upload
+    return `http://localhost:9000/iterninsight/${filename}?t=${Date.now()}`;
+  }
+  return null;
+});
+
+</script>
 
 <style scoped></style>
 
 
 <template>
-<div class="font-Prompt flex flex-col w-full space-y-2 p-2 sm:px-12 md:px-16 lg:px-32 lg:py-4 xl:px-56 2xl:px-96">
+  <div class="font-Prompt flex flex-col w-full space-y-2 p-2 sm:px-12 md:px-16 lg:px-32 lg:py-4 xl:px-56 2xl:px-96">
     <div class="flex justify-between items-center mb-2">
       <h1 class="text-left text-2xl font-bold text-hightlight">Review Detail</h1>
       <div class="text-sm text-gray-500 whitespace-nowrap">
@@ -179,7 +162,7 @@ onMounted(() => {
         <h2 class="text-2xl font-extrabold">{{ review.title || 'No title available' }}</h2>
       </div>
       <p v-if="review.description" class="text-md text-gray-700 mb-4">{{ review.description }}</p>
-      <p class="text-sm text-gray-500">Date: {{ new Date(review.date).toLocaleDateString('en-GB') }}</p>
+      <div class="text-sm text-gray-500">Date: {{ new Date(review.date).toLocaleDateString('en-GB') }}</div>
       <div v-if="user && user.id === review.user?.id" class="flex gap-4 justify-end items-center">
         <router-link
           :to="{ path: from === 'admin' ? '/admin/edit-review/' + review.id : '/edit-review/' + review.id, query: { from } }"
@@ -195,20 +178,23 @@ onMounted(() => {
     <!-- Comment section -->
     <h3 class="text-2xl font-semibold mb-2 text-hightlight">Comment</h3>
 
-
     <!-- Comment input and send button -->
     <div class="bg-white shadow rounded-lg p-4 mt-4 border border-gray-300">
       <div class="flex items-center gap-2 mb-4">
         <div
           class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-white font-bold uppercase text-xl">
-          {{ user?.name?.charAt(0) || '?' }}
+          <template v-if="profileImageUrl">
+            <img :src="profileImageUrl" alt="Profile" class="w-full h-full object-cover" />
+          </template>
+          <template v-else>
+            {{ user?.name?.charAt(0) || '?' }}
+          </template>
         </div>
         <div>
-          <strong class="text-xl">{{ user?.name || 'Unknown' }}</strong>
+          <strong class="text-hightlight  text-xl">{{ user?.name || 'Unknown' }}</strong>
         </div>
       </div>
       <div class="flex items-center border rounded-xl bg-gray-100 p-2 pr-3 ml-12 ">
-
         <textarea v-model="commentText" placeholder="Comment ..."
           class="flex-1 bg-transparent outline-none px-3 resize-none " rows="1"></textarea>
         <button @click="submitComment" :disabled="!commentText.trim()">
@@ -219,21 +205,35 @@ onMounted(() => {
           </svg>
         </button>
       </div>
-
     </div>
 
     <div v-for="cmt in comments" :key="cmt.id" class="mb-4 border rounded-lg p-4 ">
       <div class="flex justify-between items-start mb-1">
-        <div class="flex items-center gap-2">
-          <div
-            class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-white font-bold uppercase text-xl ">
-            {{ cmt.user?.name?.charAt(0) || '?' }}
-          </div>
-          <div>
-            <strong class="text-xl">{{ cmt.user?.name || 'Unknown' }}</strong>
-            <div class="text-sm text-gray-400">{{ formatDate(cmt.date) }}</div>
-          </div>
+        <!-- Commenter Info + Hover Popup -->
+        <div v-if="cmt.user" class="relative inline-block" @mouseenter="hoveredUserId = cmt.user.id"
+          @mouseleave="hoveredUserId = null">
+          <router-link :to="`/users/${cmt.user.id}`" class="flex items-center gap-2 group cursor-pointer">
+            <div
+              class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-white font-bold uppercase text-xl">
+              <img :src="cmt.user?.image?.startsWith('http') ? cmt.user.image : `http://localhost:9000/iterninsight/${cmt.user.image}`"
+                alt="Profile" class="w-10 h-10 rounded-full object-cover" />
+            </div>
+            <div>
+              <strong class="text-xl text-hightlight group-hover:underline">
+                {{ cmt.user?.name || 'Unknown' }}
+              </strong>
+              <div class="text-sm text-gray-400">
+                {{ formatDate(cmt.date) }}
+              </div>
+            </div>
+          </router-link>
+
+          <!-- ✅ Popup only on hover -->
+          <HoverPopup v-if="hoveredUserId === cmt.user.id" :user="cmt.user" class="absolute top-full left-0 z-50" />
         </div>
+
+
+
         <div v-if="user && user.id === cmt.user?.id" class="flex gap-2 text-sm text-gray-500">
           <button @click="startEditComment(cmt)"><i class="fas fa-pen"></i></button>
           <button @click="confirmDeleteComment(cmt.id)"><i class="fas fa-trash"></i></button>
@@ -258,7 +258,6 @@ onMounted(() => {
       </div>
       <p v-else class="text-base mt-1 ml-12">{{ cmt.text || '(no content)' }}</p>
     </div>
-
 
     <!-- Confirm delete modal for post -->
     <div v-if="showModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 z-50">

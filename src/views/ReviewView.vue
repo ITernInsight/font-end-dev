@@ -4,9 +4,16 @@ import { RouterLink, useRouter } from 'vue-router';
 import axios from 'axios';
 import Filter from '../components/FilterComp.vue';
 
-
 interface User {
   id: number;
+  email: string;
+  password: string;
+  username: string;
+  name: string;
+  phone: string;
+  position: string;
+  description: string;
+  image: string;
 }
 
 interface ReviewLike {
@@ -101,14 +108,16 @@ const likeReview = async (q: Review) => {
   q.isLikedByUser = true;
   q.likesCount = (q.likesCount || 0) + 1;
   reviews.value = [...reviews.value];
-  try {
+    try {
     await axios.post(`http://localhost:3000/reviews/${q.id}/like`, {}, {
       headers: { Authorization: `Bearer ${token}` }
     });
   } catch (e) {
     q.isLikedByUser = false;
     q.likesCount = (q.likesCount || 1) - 1;
+
     console.error('Like failed', e);
+
   }
 };
 
@@ -212,8 +221,8 @@ onMounted(fetchAllReviews);
         </RouterLink>
         <button @click="review.isLikedByUser ? unlikeReview(review) : likeReview(review)">
           <i
-            :class="['fas', review.isLikedByUser ? 'fa-heart text-red-500' : 'fa-heart text-gray-400']">
-          </i>
+  :class="['fas', review.isLikedByUser ? 'fa-heart text-red-500' : 'fa-heart text-gray-400']">
+</i>
           <span class="ml-1 text-sm">{{ review.likesCount }}</span>
         </button>
       </div>

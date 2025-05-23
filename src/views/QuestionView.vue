@@ -4,7 +4,6 @@ import { RouterLink, useRouter } from 'vue-router';
 import axios from 'axios';
 import Filter from '../components/FilterComp.vue';
 
-
 interface Question {
   id: number;
   title: string;

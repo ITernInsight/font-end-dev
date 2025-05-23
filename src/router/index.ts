@@ -21,8 +21,9 @@ import EditReview from '@/views/admin/EditReview.vue'
 import DetailQuestion from '@/views/admin/DetailQuestion.vue'
 import HomeView from '@/views/HomeView.vue'
 import EditProfile from '../views/EditProfile.vue'
-import RegisterPage from '../views/RegisterPage.vue'
-
+import ViewUserProfile from '../views/ViewUserProfile.vue'
+import ForgotPassword from '../views/ForgotPassword.vue'
+import RegisterPage from '@/views/RegisterPage.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -92,7 +93,6 @@ const router = createRouter({
           name: 'detail question',
           component: DetailQuestion,
         },
-
       ],
     },
     {
@@ -163,10 +163,16 @@ const router = createRouter({
       name: 'edit profile',
       component: EditProfile,
     },
-
-
-
-
+    {
+      path: '/users/:id',
+      name: 'ViewUserProfile',
+      component: ViewUserProfile,
+    },
+    {
+      path: '/ForgotPassword',
+      name: 'ForgotPassword',
+      component: ForgotPassword,
+    },
   ],
 })
 

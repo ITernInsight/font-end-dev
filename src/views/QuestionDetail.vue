@@ -3,11 +3,17 @@ import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
 
-
 // กำหนดประเภทให้กับตัวแปรต่าง ๆ
 interface User {
   id: number;
+  email: string;
+  password: string;
+  username: string;
   name: string;
+  phone: string;
+  position: string;
+  description: string;
+  image: string;
 }
 
 interface Comment {
@@ -56,6 +62,7 @@ onMounted(() => {
   fetchQuestion();
   fetchComments();
   console.log('✅ user from localStorage:', user.value);
+
 });
 
 const fetchQuestion = async () => {
@@ -66,6 +73,7 @@ const fetchQuestion = async () => {
   question.value = response.data || {};
   console.log('Loaded question:', question.value);
 };
+
 
 const fetchComments = async () => {
   try {
@@ -83,7 +91,7 @@ const submitComment = async () => {
   const res = await axios.post(`http://localhost:3000/questions/${id}/comment`, {
     text: commentText.value,
     date: now,
-    user: user.value?.id,  // ป้องกันการใช้ null
+    user: user.value.id,
     question: id,
   }, {
     headers: { Authorization: `Bearer ${token}` },
@@ -95,7 +103,7 @@ const submitComment = async () => {
   }
 };
 
-const startEditComment = (comment: Comment) => {
+const startEditComment = (comment) => {
   editCommentId.value = comment.id;
   editText.value = comment.text;
 };
@@ -117,7 +125,7 @@ const saveCommentEdit = async () => {
   await fetchComments();
 };
 
-const confirmDeleteComment = (id: number) => {
+const confirmDeleteComment = (id) => {
   deleteCommentId.value = id;
   showCommentDelete.value = true;
 };
@@ -135,7 +143,7 @@ const cancelDeleteComment = () => {
   showCommentDelete.value = false;
 };
 
-const formatDate = (dateStr: string) => {
+const formatDate = (dateStr) => {
   const d = new Date(dateStr);
   return isNaN(d.getTime()) ? 'Invalid Date' : d.toLocaleString();
 };
@@ -188,9 +196,18 @@ onMounted(() => {
   fetchQuestion();
   fetchComments();
 });
+
+const profileImageUrl = computed(() => {
+  const filename = user.value?.image || '';
+  if (filename && filename !== 'null' && filename !== 'undefined') {
+    // ป้องกัน cache และตรวจรูปได้ทันทีหลัง upload
+    return `http://localhost:9000/iterninsight/${filename}?t=${Date.now()}`;
+  }
+  return null;
+});
+
+const fullPath = computed(() => route.fullPath)
 </script>
-
-
 
 
 
@@ -203,42 +220,39 @@ onMounted(() => {
       </div>
     </div>
 
-
     <div v-if="question" class="flex flex-col border border-border rounded-lg p-6 gap-2 bg-white shadow-lg">
       <div class="mb-4">
         <h2 class="text-2xl font-extrabold">{{ question.title || 'No title available' }}</h2>
       </div>
       <p v-if="question.description" class="text-md text-gray-700 mb-4">{{ question.description }}</p>
       <p class="text-sm text-gray-500">Date: {{ formatDate(question.date) }}</p>
-      <div
-  v-if="question?.user && user && Number(user.id) === Number(question.user.id)"
-  class="flex gap-2 justify-end items-center mt-2"
->
-  <router-link
-    :to="{ path: from === 'admin' ? '/admin/edit-question/' + question.id : '/edit-question/' + question.id, query: { from } }"
-    class="text-hightlight hover:underline"
-  >
-    <i class="fas fa-edit"></i>
-  </router-link>
-  <button
-    @click="confirmDelete(question.id, question.title)"
-    class="text-hightlight hover:underline"
-  >
-    <i class="fas fa-trash"></i>
-  </button>
-</div>
-
+      <div v-if="question?.user && user && Number(user.id) === Number(question.user.id)"
+        class="flex gap-2 justify-end items-center mt-2">
+        <router-link
+          :to="{ path: from === 'admin' ? '/admin/edit-question/' + question.id : '/edit-question/' + question.id, query: { from } }"
+          class="text-hightlight hover:underline">
+          <i class="fas fa-edit"></i>
+        </router-link>
+        <button @click="confirmDelete(question.id, question.title)" class="text-hightlight hover:underline">
+          <i class="fas fa-trash"></i>
+        </button>
+      </div>
     </div>
 
     <!-- Comment section -->
     <h3 class="text-2xl font-semibold mb-2 text-hightlight">Comment</h3>
 
-    <!-- Comment input and send button -->
+    <!-- Comment input -->
     <div class="bg-white shadow rounded-lg p-4 mt-4 border border-gray-300">
       <div class="flex items-center gap-2 mb-4">
         <div
           class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-white font-bold uppercase text-xl">
-          {{ user?.name?.charAt(0) || '?' }}
+          <template v-if="profileImageUrl">
+            <img :src="profileImageUrl" alt="Profile" class="w-full h-full object-cover" />
+          </template>
+          <template v-else>
+            {{ user?.name?.charAt(0) || '?' }}
+          </template>
         </div>
         <div>
           <strong class="text-xl">{{ user?.name || 'Unknown' }}</strong>
@@ -257,28 +271,29 @@ onMounted(() => {
       </div>
     </div>
 
+    <!-- Comments list -->
     <div v-for="cmt in comments" :key="cmt.id" class="mb-4 border rounded-lg p-4">
       <div class="flex justify-between items-start mb-1">
-        <div class="flex items-center gap-2">
+        <router-link v-if="cmt.user" :to="{ path: `/users/${cmt.user.id}`, query: { from: fullPath } }"
+          class="flex items-center gap-2 group">
           <div
             class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-white font-bold uppercase text-xl">
-            {{ cmt.user?.name?.charAt(0) || '?' }}
+            <img :src="cmt.user?.image?.startsWith('http') ? cmt.user.image : `http://localhost:9000/iterninsight/${cmt.user.image}`"
+            alt="Profile" class="w-10 h-10 rounded-full object-cover" />
           </div>
           <div>
-            <strong class="text-xl">{{ cmt.user?.name || 'Unknown' }}</strong>
+            <strong class="text-xl text-hightlight group-hover:underline">
+              {{ cmt.user?.name || 'Unknown' }}
+            </strong>
             <div class="text-sm text-gray-400">{{ formatDate(cmt.date) }}</div>
           </div>
-        </div>
+        </router-link>
+
         <div v-if="user && user.id === cmt.user?.id" class="flex gap-2 text-sm text-gray-500">
           <button @click="startEditComment(cmt)"><i class="fas fa-pen"></i></button>
           <button @click="confirmDeleteComment(cmt.id)"><i class="fas fa-trash"></i></button>
         </div>
       </div>
-
-      <p class="text-xs text-gray-500">
-  Debug: user.id = {{ user?.id }} | question.user.id = {{ question?.user?.id }}
-</p>
-
 
       <div v-if="editCommentId === cmt.id">
         <textarea v-model="editText" class="w-full border rounded-md p-2 resize-none mb-2"></textarea>
@@ -299,7 +314,7 @@ onMounted(() => {
       <p v-else class="text-base mt-1 ml-12">{{ cmt.text || '(no content)' }}</p>
     </div>
 
-    <!-- Confirm delete modal for post -->
+    <!-- Confirm delete modal for question -->
     <div v-if="showModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 z-50">
       <div class="bg-white p-6 rounded-lg w-96 shadow-lg">
         <h3 class="text-lg font-bold mb-6 text-center">
@@ -329,6 +344,4 @@ onMounted(() => {
       </div>
     </div>
   </div>
-
-
 </template>

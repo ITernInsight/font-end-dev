@@ -1,11 +1,10 @@
+
 <script setup lang="ts">
   import { ref, computed, onMounted } from 'vue'
   import { RouterLink, useRoute, useRouter } from 'vue-router'
   import axios from 'axios'
   import FilterComp from '@/components/FilterComp.vue'
 
-
-  // Define the type for a review
   interface Review {
   id: number;
   title: string;
@@ -22,6 +21,8 @@
   const showModal = ref(false)
   const deleteId = ref<number | null>(null)
   const deleteTitle = ref('')
+  // const id = route.params.id;
+
 
   // ตัวแปรสำหรับ Search Bar & Date Filter
   const searchKeyword = ref('')
@@ -90,26 +91,27 @@
 
   // ฟังก์ชันลบรีวิว
   const handleDelete = async () => {
-    if (deleteId.value !== null) {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) throw new Error('Unauthorized: No token found');
+  if (deleteId.value !== null) {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) throw new Error('Unauthorized: No token found');
 
-        await axios.delete(`http://localhost:3000/reviews/${deleteId.value}`, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
+      await axios.delete(`http://localhost:3000/reviews/${deleteId.value}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
 
-        reviews.value = reviews.value.filter(review => review.id !== deleteId.value);
-        deleteId.value = null;
-        deleteTitle.value = '';
-        showModal.value = false;
-      } catch (error) {
-        console.error('Error deleting review:', error);
-      }
+      reviews.value = reviews.value.filter(review => review.id !== deleteId.value);
+      deleteId.value = null;
+      deleteTitle.value = '';
+      showModal.value = false;
+    } catch (error) {
+      console.error('Error deleting review:', error);
     }
-  };
+  }
+};
+
 
   // ยกเลิกการลบ
   const cancelDelete = () => {
@@ -133,8 +135,7 @@
 
   // State to manage dropdown visibility
   const isDropdownOpen = ref(false)
-</script>
-
+  </script>
 
 
 <template>
