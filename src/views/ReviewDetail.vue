@@ -28,7 +28,7 @@ const from = route.query.from || 'user';
 
 const fetchReview = async () => {
   const token = localStorage.getItem('token');
-  const response = await axios.get(`http://localhost:3000/reviews/${id}`, {
+  const response = await axios.get(`https://capstone24.sit.kmutt.ac.th/un3/api/reviews/${id}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   review.value = response.data;
@@ -36,7 +36,7 @@ const fetchReview = async () => {
 
 const fetchComments = async () => {
   try {
-    const res = await axios.get(`http://localhost:3000/reviews/${id}/comment`);
+    const res = await axios.get(`https://capstone24.sit.kmutt.ac.th/un3/api/reviews/${id}/comment`);
     comments.value = Array.isArray(res.data.comments) ? res.data.comments.reverse() : [];
   } catch (err) {
     console.error('Error fetching comments:', err);
@@ -48,7 +48,7 @@ const submitComment = async () => {
   const now = new Date();
 
   try {
-    const res = await axios.post(`http://localhost:3000/reviews/${id}/comment`, {
+    const res = await axios.post(`https://capstone24.sit.kmutt.ac.th/un3/api/reviews/${id}/comment`, {
       text: commentText.value,
       date: now,
       user: user.value.id,
@@ -85,7 +85,7 @@ const cancelEditComment = () => {
 
 const saveCommentEdit = async () => {
   const token = localStorage.getItem('token');
-  await axios.put(`http://localhost:3000/reviews/${id}/comment/${editCommentId.value}`, {
+  await axios.put(`https://capstone24.sit.kmutt.ac.th/un3/api/reviews/${id}/comment/${editCommentId.value}`, {
     text: editText.value,
   }, {
     headers: { Authorization: `Bearer ${token}` },
@@ -104,7 +104,7 @@ const confirmDeleteComment = (id) => {
 
 const deleteComment = async () => {
   const token = localStorage.getItem('token');
-  await axios.delete(`http://localhost:3000/reviews/${id}/comment/${deleteCommentId.value}`, {
+  await axios.delete(`https://capstone24.sit.kmutt.ac.th/un3/api/reviews/${id}/comment/${deleteCommentId.value}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   showCommentDelete.value = false;
@@ -123,7 +123,7 @@ const confirmDelete = (id, title) => {
 
 const handleDelete = async () => {
   const token = localStorage.getItem('token');
-  await axios.delete(`http://localhost:3000/reviews/${deleteId.value}`, {
+  await axios.delete(`https://capstone24.sit.kmutt.ac.th/un3/api/reviews/${deleteId.value}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   showModal.value = false;

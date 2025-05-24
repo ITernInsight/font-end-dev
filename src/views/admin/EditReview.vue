@@ -44,7 +44,7 @@ const fetchReview = async () => {
       return;
     }
 
-    const res = await axios.get(`http://localhost:3000/reviews/${id.value}`, {
+    const res = await axios.get(`https://capstone24.sit.kmutt.ac.th/un3/api/reviews/${id.value}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
 
@@ -83,7 +83,7 @@ const handleSubmit = async () => {
 
   try {
     isSubmitting.value = true;
-    await axios.put(`http://localhost:3000/reviews/${id.value}`, {
+    await axios.put(`https://capstone24.sit.kmutt.ac.th/un3/api/reviews/${id.value}`, {
       title: title.value,
       description: description.value,
       date: date.value,
