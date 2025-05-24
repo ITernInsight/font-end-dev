@@ -99,7 +99,7 @@ const addAnnouncement = async () => {
     }
 
     const response = await axios.post(
-      'http://localhost:3000/posts',
+      'https://capstone24.sit.kmutt.ac.th/un3/api/posts',
       {
         title: title.value,
         subtitle: subtitle.value,
@@ -142,7 +142,7 @@ const submitForm = () => {
 
 const fetchData = async () => {
   try {
-    const response = await axios.get<Company[]>('http://localhost:3000/companies')
+    const response = await axios.get<Company[]>('https://capstone24.sit.kmutt.ac.th/un3/api/companies')
     companies.value = response.data.map((company) => ({
       id: company.id,
       companyName: company.companyName,
