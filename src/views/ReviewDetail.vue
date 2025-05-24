@@ -6,6 +6,7 @@ import HoverPopup from '@/components/HoverPopup.vue';
 
 const route = useRoute();
 const router = useRouter();
+const fullPath = computed(() => route.fullPath)
 
 const review = ref(null);
 const comments = ref([]);
@@ -20,7 +21,7 @@ const deleteCommentId = ref(null);
 const showCommentDelete = ref(false);
 const likeCount = computed(() => review.value?.like?.length || 0);
 
-const hoveredUserId = ref(null)
+const hoveredUserId = ref<number | null>(null);
 
 const id = Number(route.params.id);
 const from = route.query.from || 'user';
@@ -46,18 +47,29 @@ const submitComment = async () => {
   const token = localStorage.getItem('token');
   const now = new Date();
 
-  const res = await axios.post(`http://localhost:3000/reviews/${id}/comment`, {
-    text: commentText.value,
-    date: now,
-    user: user.value.id,
-    review: id,
-  }, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  try {
+    const res = await axios.post(`http://localhost:3000/reviews/${id}/comment`, {
+      text: commentText.value,
+      date: now,
+      user: user.value.id,
+      review: id,
+    }, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
-  if (res.status === 201 || res.status === 200) {
-    commentText.value = '';
-    await fetchComments();
+    if (res.status === 201 || res.status === 200) {
+      const newComment = {
+        id: res.data.id || Date.now(), // fallback if no id returned
+        text: commentText.value,
+        date: now.toISOString(),
+        user: user.value, // 💡 สำคัญมาก: เพื่อให้รูปแสดง
+      };
+
+      comments.value.unshift(newComment); // แสดงทันที
+      commentText.value = '';
+    }
+  } catch (error) {
+    console.error('Error submitting comment:', error);
   }
 };
 
@@ -132,15 +144,25 @@ onMounted(() => {
   fetchReview();
   fetchComments();
 });
+
+const isValidImage = (img?: string): boolean => {
+  if (!img) return false;
+  const trimmed = img.trim().toLowerCase();
+  if (!trimmed || trimmed === 'null' || trimmed === 'undefined') return false;
+  if (trimmed === 'default.jpg') return false;  // ไม่แสดงรูป default
+  return true;
+};
+
 // profileImageUrl receive user.image from localStorage
 
 const profileImageUrl = computed(() => {
-  const filename = user.value?.image || '';
-  if (filename && filename !== 'null' && filename !== 'undefined') {
-    // ป้องกัน cache และตรวจรูปได้ทันทีหลัง upload
-    return `http://localhost:9000/iterninsight/${filename}?t=${Date.now()}`;
+  const image = user.value?.image;
+  if (!isValidImage(image) || image === 'default.jpg') {
+    return null;
   }
-  return null;
+  return image.startsWith('http')
+    ? image
+    : `http://localhost:9000/iterninsight/${image}?t=${Date.now()}`;
 });
 
 </script>
@@ -179,24 +201,24 @@ const profileImageUrl = computed(() => {
     <h3 class="text-2xl font-semibold mb-2 text-hightlight">Comment</h3>
 
     <!-- Comment input and send button -->
-    <div class="bg-white shadow rounded-lg p-4 mt-4 border border-gray-300">
+    <div v-if="user" class="bg-white shadow rounded-lg p-4 mt-4 border border-gray-300">
       <div class="flex items-center gap-2 mb-4">
-        <div
-          class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-white font-bold uppercase text-xl">
-          <template v-if="profileImageUrl">
-            <img :src="profileImageUrl" alt="Profile" class="w-full h-full object-cover" />
-          </template>
-          <template v-else>
-            {{ user?.name?.charAt(0) || '?' }}
-          </template>
+        <div class="w-10 h-10 rounded-full overflow-hidden">
+          <div v-if="profileImageUrl" class="w-full h-full">
+            <img :src="profileImageUrl" alt="Profile" class="w-full h-full object-cover rounded-full" />
+          </div>
+          <div v-else
+            class="bg-[#00465e] w-full h-full flex items-center justify-center text-white font-bold text-lg uppercase">
+            {{ user?.name?.charAt(0).toUpperCase() || '?' }}
+          </div>
         </div>
         <div>
-          <strong class="text-hightlight  text-xl">{{ user?.name || 'Unknown' }}</strong>
+          <strong class="text-xl font-bold text-hightlight">{{ user?.name || 'Unknown' }}</strong>
         </div>
       </div>
-      <div class="flex items-center border rounded-xl bg-gray-100 p-2 pr-3 ml-12 ">
+      <div class="flex items-center border rounded-xl bg-gray-100 p-2 pr-3 ml-12">
         <textarea v-model="commentText" placeholder="Comment ..."
-          class="flex-1 bg-transparent outline-none px-3 resize-none " rows="1"></textarea>
+          class="flex-1 bg-transparent outline-none px-3 resize-none" rows="1"></textarea>
         <button @click="submitComment" :disabled="!commentText.trim()">
           <svg :class="['w-5 h-5', commentText.trim() ? 'text-blue-600' : 'text-gray-400']" fill="currentColor"
             viewBox="0 0 24 24">
@@ -212,14 +234,24 @@ const profileImageUrl = computed(() => {
         <!-- Commenter Info + Hover Popup -->
         <div v-if="cmt.user" class="relative inline-block" @mouseenter="hoveredUserId = cmt.user.id"
           @mouseleave="hoveredUserId = null">
-          <router-link :to="`/users/${cmt.user.id}`" class="flex items-center gap-2 group cursor-pointer">
-            <div
-              class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-white font-bold uppercase text-xl">
-              <img :src="cmt.user?.image?.startsWith('http') ? cmt.user.image : `http://localhost:9000/iterninsight/${cmt.user.image}`"
-                alt="Profile" class="w-10 h-10 rounded-full object-cover" />
+          <router-link v-if="cmt.user" :to="{ path: `/users/${cmt.user.id}`, query: { from: fullPath } }"
+            class="flex items-center gap-2 group">
+            <div class="w-10 h-10 rounded-full flex items-center justify-center border overflow-hidden">
+              <template v-if="isValidImage(cmt.user?.image)">
+                <img :src="cmt.user.image.startsWith('http')
+                    ? cmt.user.image
+                    : `http://localhost:9000/iterninsight/${cmt.user.image}`
+                  " alt="Profile" class="w-10 h-10 rounded-full object-cover border" />
+              </template>
+              <template v-else>
+                <div
+                  class="w-10 h-10 rounded-full bg-[#00465e] text-white flex items-center justify-center text-xl font-bold">
+                  {{ cmt.user?.name?.charAt(0).toUpperCase() || '?' }}
+                </div>
+              </template>
             </div>
             <div>
-              <strong class="text-xl text-hightlight group-hover:underline">
+              <strong class="text-xl font-bold text-hightlight group-hover:underline">
                 {{ cmt.user?.name || 'Unknown' }}
               </strong>
               <div class="text-sm text-gray-400">

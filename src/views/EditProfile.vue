@@ -2,6 +2,7 @@
 import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
 import { useRouter } from 'vue-router'
+import { toRaw } from 'vue'
 
 interface UserData {
   id?: number
@@ -49,13 +50,18 @@ const saveAll = async () => {
     const token = localStorage.getItem('token')
     const id = user.value.id
     if (!token || !id) throw new Error('No token or user ID found.')
-    // uploadFile() // upload file first
-    // if selectedFile.value is not null, upload it
+
+    // ถ้ามี selectedFile ให้ upload ก่อน
     if (selectedFile.value) {
       await uploadFile()
     }
-    // const respond = uploadFile()
-    await axios.put(`http://localhost:3000/users/${id}`, user.value, {
+
+    // ✅ ใช้ toRaw เพื่อลบ photoUrl ออก
+    const rawUser = toRaw(user.value);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { photoUrl, ...userDataToSend } = rawUser;
+
+    await axios.put(`http://localhost:3000/users/${id}`, userDataToSend, {
       headers: { Authorization: `Bearer ${token}` }
     })
 
@@ -63,7 +69,6 @@ const saveAll = async () => {
     localStorage.setItem('user', JSON.stringify(user.value))
     window.dispatchEvent(new Event('user-logged-in'))
 
-    // go back to last page
     router.back()
   } catch (err: unknown) {
     let message = 'An error occurred'
@@ -189,7 +194,8 @@ const profileImageUrl = computed(() => {
       <!-- รูปโปรไฟล์ -->
       <div class="flex flex-col items-center mb-6">
         <div class="w-32 h-32 rounded-full border-2 border-[#00465e] mb-4 overflow-hidden">
-          <img :src="profileImageUrl" @error="console.log('❌ โหลดรูปไม่สำเร็จ:', profileImageUrl)" />
+          <img :src="profileImageUrl" class="w-full h-full object-cover"
+            @error="console.log('❌ โหลดรูปไม่สำเร็จ:', profileImageUrl)" />
 
         </div>
         <label class="cursor-pointer text-[#00465e] hover:text-[#00384c]">

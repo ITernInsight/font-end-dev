@@ -110,7 +110,7 @@ const registerUser = async () => {
 
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Phone <span
-                class="text-red-500">*</span></label>
+                class="text-red-500"></span></label>
             <input v-model="phone" type="text" placeholder="e.g. 0812345678" maxlength="10"
               @input="phone = phone.slice(0, 10)"
               class="w-full border px-4 py-2 rounded text-sm placeholder-gray-300" />
@@ -118,14 +118,14 @@ const registerUser = async () => {
 
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Position <span
-                class="text-red-500">*</span></label>
+                class="text-red-500"></span></label>
             <input v-model="position" type="text" placeholder="e.g. Developer, Student"
               class="w-full border px-4 py-2 rounded text-sm placeholder-gray-300" />
           </div>
 
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Description <span
-                class="text-red-500">*</span></label>
+                class="text-red-500"></span></label>
             <textarea v-model="description" placeholder="about yourself"
               class="w-full border px-4 py-2 rounded text-sm placeholder-gray-300"></textarea>
           </div>

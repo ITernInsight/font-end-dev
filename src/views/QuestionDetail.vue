@@ -2,6 +2,7 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
+import HoverPopup from '@/components/HoverPopup.vue';
 
 // กำหนดประเภทให้กับตัวแปรต่าง ๆ
 interface User {
@@ -34,6 +35,7 @@ interface Question {
 
 const route = useRoute();
 const router = useRouter();
+const fullPath = computed(() => route.fullPath)
 
 // กำหนดประเภทให้กับตัวแปรที่ใช้ใน ref
 const id = Number(route.params.id);
@@ -54,10 +56,13 @@ const likeCount = computed(() => question.value?.like?.length || 0);
 
 const user = ref<User | null>(null);  // ใช้ประเภท User หรือ null
 
+const hoveredUserId = ref<number | null>(null);
+
 onMounted(() => {
   const stored = localStorage.getItem('user');
   if (stored) {
     user.value = JSON.parse(stored);
+
   }
   fetchQuestion();
   fetchComments();
@@ -88,20 +93,32 @@ const submitComment = async () => {
   const token = localStorage.getItem('token');
   const now = new Date();
 
-  const res = await axios.post(`http://localhost:3000/questions/${id}/comment`, {
-    text: commentText.value,
-    date: now,
-    user: user.value.id,
-    question: id,
-  }, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  try {
+    const res = await axios.post(`http://localhost:3000/questions/${id}/comment`, {
+      text: commentText.value,
+      date: now,
+      user: user.value.id,
+      review: id,
+    }, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
-  if (res.status === 201 || res.status === 200) {
-    commentText.value = '';
-    await fetchComments();
+    if (res.status === 201 || res.status === 200) {
+      const newComment = {
+        id: res.data.id || Date.now(), // fallback if no id returned
+        text: commentText.value,
+        date: now.toISOString(),
+        user: user.value, // 💡 สำคัญมาก: เพื่อให้รูปแสดง
+      };
+
+      comments.value.unshift(newComment); // แสดงทันที
+      commentText.value = '';
+    }
+  } catch (error) {
+    console.error('Error submitting comment:', error);
   }
 };
+
 
 const startEditComment = (comment) => {
   editCommentId.value = comment.id;
@@ -197,16 +214,27 @@ onMounted(() => {
   fetchComments();
 });
 
+const isValidImage = (img?: string): boolean => {
+  if (!img) return false;
+  const trimmed = img.trim().toLowerCase();
+  if (!trimmed || trimmed === 'null' || trimmed === 'undefined') return false;
+  if (trimmed === 'default.jpg') return false;  // ไม่แสดงรูป default
+  return true;
+};
+
+// profileImageUrl receive user.image from localStorage
+
 const profileImageUrl = computed(() => {
-  const filename = user.value?.image || '';
-  if (filename && filename !== 'null' && filename !== 'undefined') {
-    // ป้องกัน cache และตรวจรูปได้ทันทีหลัง upload
-    return `http://localhost:9000/iterninsight/${filename}?t=${Date.now()}`;
+  const image = user.value?.image;
+  if (!isValidImage(image) || image === 'default.jpg') {
+    return null;
   }
-  return null;
+  return image.startsWith('http')
+    ? image
+    : `http://localhost:9000/iterninsight/${image}?t=${Date.now()}`;
 });
 
-const fullPath = computed(() => route.fullPath)
+
 </script>
 
 
@@ -220,6 +248,7 @@ const fullPath = computed(() => route.fullPath)
       </div>
     </div>
 
+    <!-- Question -->
     <div v-if="question" class="flex flex-col border border-border rounded-lg p-6 gap-2 bg-white shadow-lg">
       <div class="mb-4">
         <h2 class="text-2xl font-extrabold">{{ question.title || 'No title available' }}</h2>
@@ -239,23 +268,23 @@ const fullPath = computed(() => route.fullPath)
       </div>
     </div>
 
-    <!-- Comment section -->
+    <!-- Comment Section -->
     <h3 class="text-2xl font-semibold mb-2 text-hightlight">Comment</h3>
 
-    <!-- Comment input -->
-    <div class="bg-white shadow rounded-lg p-4 mt-4 border border-gray-300">
+    <!-- Comment Input -->
+    <div v-if="user" class="bg-white shadow rounded-lg p-4 mt-4 border border-gray-300">
       <div class="flex items-center gap-2 mb-4">
-        <div
-          class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-white font-bold uppercase text-xl">
-          <template v-if="profileImageUrl">
-            <img :src="profileImageUrl" alt="Profile" class="w-full h-full object-cover" />
-          </template>
-          <template v-else>
-            {{ user?.name?.charAt(0) || '?' }}
-          </template>
+        <div class="w-10 h-10 rounded-full overflow-hidden">
+          <div v-if="profileImageUrl" class="w-full h-full">
+            <img :src="profileImageUrl" alt="Profile" class="w-full h-full object-cover rounded-full" />
+          </div>
+          <div v-else
+            class="w-10 h-10 rounded-full bg-[#00465e] text-white flex items-center justify-center text-xl font-bold">
+            {{ user?.name?.charAt(0).toUpperCase() || '?' }}
+          </div>
         </div>
         <div>
-          <strong class="text-xl">{{ user?.name || 'Unknown' }}</strong>
+          <strong class="text-xl font-bold text-hightlight">{{ user?.name || 'Unknown' }}</strong>
         </div>
       </div>
       <div class="flex items-center border rounded-xl bg-gray-100 p-2 pr-3 ml-12">
@@ -271,23 +300,37 @@ const fullPath = computed(() => route.fullPath)
       </div>
     </div>
 
-    <!-- Comments list -->
+    <div v-else class="bg-yellow-100 text-yellow-800 border border-yellow-400 p-4 rounded mb-4">
+      กรุณาเข้าสู่ระบบก่อนแสดงความคิดเห็น
+    </div>
+
+    <!-- Comments List -->
     <div v-for="cmt in comments" :key="cmt.id" class="mb-4 border rounded-lg p-4">
       <div class="flex justify-between items-start mb-1">
-        <router-link v-if="cmt.user" :to="{ path: `/users/${cmt.user.id}`, query: { from: fullPath } }"
-          class="flex items-center gap-2 group">
-          <div
-            class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center text-white font-bold uppercase text-xl">
-            <img :src="cmt.user?.image?.startsWith('http') ? cmt.user.image : `http://localhost:9000/iterninsight/${cmt.user.image}`"
-            alt="Profile" class="w-10 h-10 rounded-full object-cover" />
-          </div>
-          <div>
-            <strong class="text-xl text-hightlight group-hover:underline">
-              {{ cmt.user?.name || 'Unknown' }}
-            </strong>
-            <div class="text-sm text-gray-400">{{ formatDate(cmt.date) }}</div>
-          </div>
-        </router-link>
+        <div v-if="cmt.user" class="relative inline-block" @mouseenter="hoveredUserId = cmt.user.id"
+          @mouseleave="hoveredUserId = null">
+          <router-link v-if="cmt.user" :to="{ path: `/users/${cmt.user.id}`, query: { from: fullPath } }"
+            class="flex items-center gap-2 group">
+            <div class="w-10 h-10 rounded-full flex items-center justify-center border overflow-hidden">
+              <template v-if="isValidImage(cmt.user?.image)">
+  <img :src="cmt.user.image.startsWith('http') ? cmt.user.image : `http://localhost:9000/iterninsight/${cmt.user.image}`" alt="Profile" class="w-10 h-10 rounded-full object-cover border" />
+</template>
+<template v-else>
+  <div class="w-10 h-10 rounded-full bg-[#00465e] text-white flex items-center justify-center text-xl font-bold">
+    {{ cmt.user?.name?.charAt(0).toUpperCase() || '?' }}
+  </div>
+</template>
+            </div>
+            <div>
+              <strong class="text-xl font-bold text-hightlight group-hover:underline">
+                {{ cmt.user?.name || 'Unknown' }}
+              </strong>
+              <div class="text-sm text-gray-400">{{ formatDate(cmt.date) }}</div>
+            </div>
+          </router-link>
+          <!-- ✅ Popup only on hover -->
+          <HoverPopup v-if="hoveredUserId === cmt.user.id" :user="cmt.user" class="absolute top-full left-0 z-50" />
+        </div>
 
         <div v-if="user && user.id === cmt.user?.id" class="flex gap-2 text-sm text-gray-500">
           <button @click="startEditComment(cmt)"><i class="fas fa-pen"></i></button>
@@ -307,14 +350,15 @@ const fullPath = computed(() => route.fullPath)
             ]">
             Save
           </button>
-          <button @click="cancelEditComment"
-            class="bg-gray-400 text-white px-3 py-1 rounded hover:bg-gray-500">Cancel</button>
+          <button @click="cancelEditComment" class="bg-gray-400 text-white px-3 py-1 rounded hover:bg-gray-500">
+            Cancel
+          </button>
         </div>
       </div>
       <p v-else class="text-base mt-1 ml-12">{{ cmt.text || '(no content)' }}</p>
     </div>
 
-    <!-- Confirm delete modal for question -->
+    <!-- Delete Modals -->
     <div v-if="showModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 z-50">
       <div class="bg-white p-6 rounded-lg w-96 shadow-lg">
         <h3 class="text-lg font-bold mb-6 text-center">
@@ -329,17 +373,15 @@ const fullPath = computed(() => route.fullPath)
       </div>
     </div>
 
-    <!-- Confirm delete modal for comment -->
     <div v-if="showCommentDelete" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 z-50">
       <div class="bg-white p-6 rounded-lg w-96 shadow-lg">
-        <h3 class="text-lg font-bold mb-6 text-center">
-          ⚠️ Delete this comment?
-        </h3>
+        <h3 class="text-lg font-bold mb-6 text-center">⚠️ Delete this comment?</h3>
         <div class="flex justify-center gap-6">
           <button @click="deleteComment"
             class="bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700">Confirm</button>
-          <button @click="cancelDeleteComment"
-            class="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600">Cancel</button>
+          <button @click="cancelDeleteComment" class="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600">
+            Cancel
+          </button>
         </div>
       </div>
     </div>
