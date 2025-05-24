@@ -61,7 +61,7 @@ const saveAll = async () => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { photoUrl, ...userDataToSend } = rawUser;
 
-    await axios.put(`https://capstone24.sit.kmutt.ac.th/un3/api/users/${id}`, userDataToSend, {
+    await axios.put(`http://localhost:3000/users/${id}`, userDataToSend, {
       headers: { Authorization: `Bearer ${token}` }
     })
 
@@ -135,7 +135,7 @@ const uploadFile = async () => {
   formData.append('image', selectedFile.value);
 
   try {
-    const response = await axios.post('https://capstone24.sit.kmutt.ac.th/un3/api/file-upload/single', formData, {
+    const response = await axios.post('http://localhost:3000/file-upload/single', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
 
@@ -146,7 +146,7 @@ const uploadFile = async () => {
     console.log('Image filename:', filename);
 
     // ✅ ส่งไปอัปเดต backend
-    await axios.post('https://capstone24.sit.kmutt.ac.th/un3/api/login/update_image', {
+    await axios.post('http://localhost:3000/login/update_image', {
       email: user.value.email,
       imageUrl: filename
     });

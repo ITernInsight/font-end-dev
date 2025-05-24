@@ -84,7 +84,7 @@ const addReview = async () => {
     }
 
     const response = await axios.post(
-      'https://capstone24.sit.kmutt.ac.th/un3/api/reviews',
+      'http://localhost:3000/reviews',
       {
         userId,
         title: title.value,

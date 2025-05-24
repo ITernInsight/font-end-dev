@@ -22,7 +22,7 @@ const isSuccess = ref(false) // ถ้า true = success, ถ้า false = erro
 const sendVerifyCode = async () => {
   try {
     loading.value = true
-    const response = await axios.post('https://capstone24.sit.kmutt.ac.th/un3/api/login/send-verify-email', { email: email.value })
+    const response = await axios.post('http://localhost:3000/login/send-verify-email', { email: email.value })
     message.value = response.data.message || 'Verification code sent.'
     showForm.value = true
   } catch (error: unknown) {
@@ -37,7 +37,7 @@ const sendVerifyCode = async () => {
 const resetPassword = async () => {
   try {
     loading.value = true
-    const response = await axios.post('https://capstone24.sit.kmutt.ac.th/un3/api/login/reset-password', {
+    const response = await axios.post('http://localhost:3000/login/reset-password', {
       email: email.value,
       verifyCode: verifyCode.value,
       newPassword: newPassword.value,

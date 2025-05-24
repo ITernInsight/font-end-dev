@@ -15,7 +15,7 @@ const isBookmarkView = ref(false)
 const fetchBookmarkedPosts = async () => {
   try {
     isLoading.value = true
-    const response = await axios.get<Post[]>('https://capstone24.sit.kmutt.ac.th/un3/api/posts')
+    const response = await axios.get<Post[]>('http://localhost:3000/posts')
     posts.value = response.data
       .filter((post) => post.isBookmarked)
       .map((post) => ({
@@ -65,7 +65,7 @@ const endDateSelected = ref('') // end date filter
 
 const fetchData = async () => {
   try {
-    const response = await axios.get<Post[]>('https://capstone24.sit.kmutt.ac.th/un3/api/posts')
+    const response = await axios.get<Post[]>('http://localhost:3000/posts')
 
     // เตรียม token ไว้ใช้สำหรับตรวจสอบ bookmark
     const token = localStorage.getItem('token')
@@ -91,7 +91,7 @@ const fetchData = async () => {
       const bookmarkStatuses = await Promise.all(
         posts.value.map(async (post) => {
           try {
-            const res = await axios.get(`https://capstone24.sit.kmutt.ac.th/un3/api/posts/${post.id}/bookmark`, {
+            const res = await axios.get(`http://localhost:3000/posts/${post.id}/bookmark`, {
               headers: {
                 Authorization: `Bearer ${token}`,
               },
@@ -128,7 +128,7 @@ const toggleBookmark = async (post: Post) => {
   try {
     await axios({
       method: post.isBookmarked ? 'DELETE' : 'POST',
-      url: `https://capstone24.sit.kmutt.ac.th/un3/api/posts/${post.id}/bookmark`,
+      url: `http://localhost:3000/posts/${post.id}/bookmark`,
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -189,7 +189,7 @@ onMounted(async () => {
   try {
     if (route.query.bookmarked === 'true') {
       // ✅ ดึงเฉพาะโพสต์ที่ผู้ใช้ bookmark ไว้
-      const res = await axios.get('https://capstone24.sit.kmutt.ac.th/un3/api/posts/bookmarks/me', {
+      const res = await axios.get('http://localhost:3000/posts/bookmarks/me', {
         headers: {
           Authorization: `Bearer ${token}`
         }

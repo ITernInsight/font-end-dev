@@ -37,7 +37,7 @@ const fetchData = async () => {
     const token = localStorage.getItem('token')
     if (!token) throw new Error('Unauthorized: No token found')
 
-    const response = await axios.get(`https://capstone24.sit.kmutt.ac.th/un3/api/posts/${postId}`, {
+    const response = await axios.get(`http://localhost:3000/posts/${postId}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -60,7 +60,7 @@ const deleteAnnouncement = async (id: number) => {
     const token = localStorage.getItem('token')
     if (!token) throw new Error('Unauthorized: No token found')
 
-    await axios.delete(`https://capstone24.sit.kmutt.ac.th/un3/api/posts/${id}`, {
+    await axios.delete(`http://localhost:3000/posts/${id}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
