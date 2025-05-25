@@ -4,34 +4,65 @@ import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
 import HoverPopup from '@/components/HoverPopup.vue';
 
+interface User {
+  id: number;
+  email: string;
+  password: string;
+  username: string;
+  name: string;
+  phone: string;
+  position: string;
+  description: string;
+  image: string;
+}
+
+interface Comment {
+  id: number;
+  text: string;
+  user: User;
+  date: string;
+}
+
+interface Review {
+  id: number;
+  title: string;
+  description: string;
+  date: string;
+  user: User;
+  like: unknown[];
+}
+
 const route = useRoute();
 const router = useRouter();
 const fullPath = computed(() => route.fullPath)
 
-const review = ref(null);
-const comments = ref([]);
+const review = ref<Review | null>(null);
+const comments = ref<Comment[]>([]);
 const commentText = ref('');
-const user = ref(JSON.parse(localStorage.getItem('user')));
+const user = ref<User | null>(null);
 const showModal = ref(false);
-const deleteId = ref(null);
+const deleteId = ref<number | null>(null);
 const deleteTitle = ref('');
-const editCommentId = ref(null);
+const editCommentId = ref<number | null>(null);
 const editText = ref('');
-const deleteCommentId = ref(null);
+const deleteCommentId = ref<number | null>(null);
 const showCommentDelete = ref(false);
 const likeCount = computed(() => review.value?.like?.length || 0);
-
 const hoveredUserId = ref<number | null>(null);
 
 const id = Number(route.params.id);
 const from = route.query.from || 'user';
 
 const fetchReview = async () => {
-  const token = localStorage.getItem('token');
-  const response = await axios.get(`http://localhost:3000/reviews/${id}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  review.value = response.data;
+  try {
+    const token = localStorage.getItem('token');
+    const response = await axios.get(`http://localhost:3000/reviews/${id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    review.value = response.data || null;
+  } catch (err) {
+    console.error('Error loading question:', err);
+  }
 };
 
 const fetchComments = async () => {
@@ -43,37 +74,51 @@ const fetchComments = async () => {
   }
 };
 
+onMounted(() => {
+  const stored = localStorage.getItem('user');
+  if (stored) user.value = JSON.parse(stored);
+  fetchReview();
+  fetchComments();
+});
+
 const submitComment = async () => {
   const token = localStorage.getItem('token');
   const now = new Date();
 
   try {
-    const res = await axios.post(`http://localhost:3000/reviews/${id}/comment`, {
-      text: commentText.value,
-      date: now,
-      user: user.value.id,
-      review: id,
-    }, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    if (res.status === 201 || res.status === 200) {
-      const newComment = {
-        id: res.data.id || Date.now(), // fallback if no id returned
+    const res = await axios.post(
+      `http://localhost:3000/reviews/${id}/comment`,
+      {
         text: commentText.value,
-        date: now.toISOString(),
-        user: user.value, // 💡 สำคัญมาก: เพื่อให้รูปแสดง
-      };
+        date: now,
+        user: user.value?.id,
+        review: id,
+      },
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
 
-      comments.value.unshift(newComment); // แสดงทันที
+    if ([200, 201].includes(res.status)) {
+      // สมมติ backend ส่งกลับ { comment: {...} }
+      const createdComment = res.data.comment || res.data;
+
+      comments.value.unshift({
+        id: createdComment.id,
+        text: createdComment.text,
+        date: new Date(createdComment.date).toISOString(),
+        user: createdComment.user || user.value!,
+      });
+
       commentText.value = '';
     }
-  } catch (error) {
-    console.error('Error submitting comment:', error);
+  } catch (err) {
+    console.error('Error submitting comment:', err);
   }
 };
 
-const startEditComment = (comment) => {
+
+const startEditComment = (comment: Comment) => {
   editCommentId.value = comment.id;
   editText.value = comment.text;
 };
@@ -84,58 +129,73 @@ const cancelEditComment = () => {
 };
 
 const saveCommentEdit = async () => {
-  const token = localStorage.getItem('token');
-  await axios.put(`http://localhost:3000/reviews/${id}/comment/${editCommentId.value}`, {
-    text: editText.value,
-  }, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-
-
-
-  cancelEditComment();
-  await fetchComments();
+  try {
+    const token = localStorage.getItem('token');
+    await axios.put(`http://localhost:3000/reviews/${id}/comment/${editCommentId.value}`,
+      { text: editText.value },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    cancelEditComment();
+    await fetchComments();
+  } catch (err) {
+    console.error('Error editing comment:', err);
+  }
 };
 
-const confirmDeleteComment = (id) => {
+const confirmDeleteComment = (id: number) => {
   deleteCommentId.value = id;
   showCommentDelete.value = true;
 };
 
 const deleteComment = async () => {
-  const token = localStorage.getItem('token');
-  await axios.delete(`http://localhost:3000/reviews/${id}/comment/${deleteCommentId.value}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  showCommentDelete.value = false;
-  await fetchComments();
+  try {
+    const token = localStorage.getItem('token');
+    await axios.delete(`http://localhost:3000/reviews/${id}/comment/${deleteCommentId.value}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    showCommentDelete.value = false;
+    await fetchComments();
+  } catch (err) {
+    console.error('Error deleting comment:', err);
+  }
 };
 
 const cancelDeleteComment = () => {
   showCommentDelete.value = false;
 };
 
-const confirmDelete = (id, title) => {
-  deleteId.value = id;
+const confirmDelete = (qid: number, title: string) => {
+  deleteId.value = qid;
   deleteTitle.value = title;
   showModal.value = true;
 };
 
 const handleDelete = async () => {
-  const token = localStorage.getItem('token');
-  await axios.delete(`http://localhost:3000/reviews/${deleteId.value}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  showModal.value = false;
-  if (from === 'admin') router.push('/admin/review');
-  else router.push('/reviews');
+  if (!deleteId.value) return
+  try {
+    const token = localStorage.getItem('token');
+    await axios.delete(`http://localhost:3000/reviews/${deleteId.value}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    showModal.value = false;
+    redirectBack();
+  } catch (err) {
+    console.error('Error deleting question:', err);
+    showModal.value = false;
+  }
+};
+
+const redirectBack = () => {
+  router.push(from === 'admin' ? '/admin/question' : '/questions');
 };
 
 const cancelDelete = () => {
   showModal.value = false;
+  deleteId.value = null;
+  deleteTitle.value = '';
 };
 
-const formatDate = (dateStr) => {
+const formatDate = (dateStr: string): string => {
   const d = new Date(dateStr);
   return isNaN(d.getTime()) ? 'Invalid Date' : d.toLocaleString();
 };
@@ -146,20 +206,16 @@ onMounted(() => {
 });
 
 const isValidImage = (img?: string): boolean => {
-  if (!img) return false;
-  const trimmed = img.trim().toLowerCase();
-  if (!trimmed || trimmed === 'null' || trimmed === 'undefined') return false;
-  if (trimmed === 'default.jpg') return false;  // ไม่แสดงรูป default
-  return true;
+  const trimmed = img?.trim().toLowerCase();
+  return !!(trimmed && trimmed !== 'null' && trimmed !== 'undefined' && trimmed !== 'default.jpg');
 };
 
 // profileImageUrl receive user.image from localStorage
 
 const profileImageUrl = computed(() => {
-  const image = user.value?.image;
-  if (!isValidImage(image) || image === 'default.jpg') {
-    return null;
-  }
+  if (!user.value || !isValidImage(user.value.image)) return null;
+
+  const image = user.value.image;
   return image.startsWith('http')
     ? image
     : `http://localhost:9000/iterninsight/${image}?t=${Date.now()}`;
@@ -239,8 +295,8 @@ const profileImageUrl = computed(() => {
             <div class="w-10 h-10 rounded-full flex items-center justify-center border overflow-hidden">
               <template v-if="isValidImage(cmt.user?.image)">
                 <img :src="cmt.user.image.startsWith('http')
-                    ? cmt.user.image
-                    : `http://localhost:9000/iterninsight/${cmt.user.image}`
+                  ? cmt.user.image
+                  : `http://localhost:9000/iterninsight/${cmt.user.image}`
                   " alt="Profile" class="w-10 h-10 rounded-full object-cover border" />
               </template>
               <template v-else>

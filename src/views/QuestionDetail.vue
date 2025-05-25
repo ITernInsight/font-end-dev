@@ -4,7 +4,6 @@ import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
 import HoverPopup from '@/components/HoverPopup.vue';
 
-// กำหนดประเภทให้กับตัวแปรต่าง ๆ
 interface User {
   id: number;
   email: string;
@@ -35,50 +34,45 @@ interface Question {
 
 const route = useRoute();
 const router = useRouter();
-const fullPath = computed(() => route.fullPath)
 
-// กำหนดประเภทให้กับตัวแปรที่ใช้ใน ref
 const id = Number(route.params.id);
 const from = route.query.from || 'user';
+const fullPath = computed(() => route.fullPath);
 
-const question = ref<Question | null>(null);  // ใช้ประเภท Question หรือ null
-const comments = ref<Comment[]>([]);  // ใช้ประเภท Comment[]
-const commentText = ref<string>('');  // ใช้ประเภท string
+const question = ref<Question | null>(null);
+const comments = ref<Comment[]>([]);
+const commentText = ref('');
 const showModal = ref(false);
 const deleteId = ref<number | null>(null);
-const deleteTitle = ref<string>('');
-// const isLoading = ref(true);
+const deleteTitle = ref('');
 const editCommentId = ref<number | null>(null);
-const editText = ref<string>('');
+const editText = ref('');
 const deleteCommentId = ref<number | null>(null);
 const showCommentDelete = ref(false);
-const likeCount = computed(() => question.value?.like?.length || 0);
-
-const user = ref<User | null>(null);  // ใช้ประเภท User หรือ null
-
 const hoveredUserId = ref<number | null>(null);
+
+const user = ref<User | null>(null);
+
+const likeCount = computed(() => question.value?.like?.length || 0);
 
 onMounted(() => {
   const stored = localStorage.getItem('user');
-  if (stored) {
-    user.value = JSON.parse(stored);
-
-  }
+  if (stored) user.value = JSON.parse(stored);
   fetchQuestion();
   fetchComments();
-  console.log('✅ user from localStorage:', user.value);
-
 });
 
 const fetchQuestion = async () => {
-  const token = localStorage.getItem('token');
-  const response = await axios.get(`http://localhost:3000/questions/${id}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  question.value = response.data || {};
-  console.log('Loaded question:', question.value);
+  try {
+    const token = localStorage.getItem('token');
+    const res = await axios.get(`http://localhost:3000/questions/${id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    question.value = res.data || null;
+  } catch (err) {
+    console.error('Error loading question:', err);
+  }
 };
-
 
 const fetchComments = async () => {
   try {
@@ -92,35 +86,36 @@ const fetchComments = async () => {
 const submitComment = async () => {
   const token = localStorage.getItem('token');
   const now = new Date();
-
   try {
-    const res = await axios.post(`http://localhost:3000/questions/${id}/comment`, {
-      text: commentText.value,
-      date: now,
-      user: user.value.id,
-      review: id,
-    }, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    if (res.status === 201 || res.status === 200) {
-      const newComment = {
-        id: res.data.id || Date.now(), // fallback if no id returned
+    const res = await axios.post(
+      `http://localhost:3000/questions/${id}/comment`,
+      {
         text: commentText.value,
-        date: now.toISOString(),
-        user: user.value, // 💡 สำคัญมาก: เพื่อให้รูปแสดง
-      };
+        date: now,
+        user: user.value?.id,
+        review: id,
+      },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
 
-      comments.value.unshift(newComment); // แสดงทันที
+    if ([200, 201].includes(res.status)) {
+      const createdComment = res.data.comment;
+
+      comments.value.unshift({
+        id: createdComment.id,
+        text: createdComment.text,
+        date: new Date(createdComment.date).toISOString(),
+        user: createdComment.user || user.value!,
+      });
+
       commentText.value = '';
     }
-  } catch (error) {
-    console.error('Error submitting comment:', error);
+  } catch (err) {
+    console.error('Error submitting comment:', err);
   }
 };
 
-
-const startEditComment = (comment) => {
+const startEditComment = (comment: Comment) => {
   editCommentId.value = comment.id;
   editText.value = comment.text;
 };
@@ -131,36 +126,43 @@ const cancelEditComment = () => {
 };
 
 const saveCommentEdit = async () => {
-  const token = localStorage.getItem('token');
-  await axios.put(`http://localhost:3000/questions/${id}/comment/${editCommentId.value}`, {
-    text: editText.value,
-  }, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-
-  cancelEditComment();
-  await fetchComments();
+  try {
+    const token = localStorage.getItem('token');
+    await axios.put(
+      `http://localhost:3000/questions/${id}/comment/${editCommentId.value}`,
+      { text: editText.value },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    cancelEditComment();
+    await fetchComments();
+  } catch (err) {
+    console.error('Error editing comment:', err);
+  }
 };
 
-const confirmDeleteComment = (id) => {
+const confirmDeleteComment = (id: number) => {
   deleteCommentId.value = id;
   showCommentDelete.value = true;
 };
 
 const deleteComment = async () => {
-  const token = localStorage.getItem('token');
-  await axios.delete(`http://localhost:3000/questions/${id}/comment/${deleteCommentId.value}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  showCommentDelete.value = false;
-  await fetchComments();
+  try {
+    const token = localStorage.getItem('token');
+    await axios.delete(`http://localhost:3000/questions/${id}/comment/${deleteCommentId.value}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    showCommentDelete.value = false;
+    await fetchComments();
+  } catch (err) {
+    console.error('Error deleting comment:', err);
+  }
 };
 
 const cancelDeleteComment = () => {
   showCommentDelete.value = false;
 };
 
-const formatDate = (dateStr) => {
+const formatDate = (dateStr: string): string => {
   const d = new Date(dateStr);
   return isNaN(d.getTime()) ? 'Invalid Date' : d.toLocaleString();
 };
@@ -171,73 +173,45 @@ const confirmDelete = (qid: number, title: string) => {
   showModal.value = true;
 };
 
-const redirectBack = () => {
-  if (from === 'admin') {
-    router.push('/admin/question');
-  } else {
-    router.push('/questions');
-  }
-};
-
-const handleDelete = async () => {
-  if (deleteId.value !== null) {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        console.error('No token found');
-        return;
-      }
-
-      await axios.delete(`http://localhost:3000/questions/${deleteId.value}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      showModal.value = false;
-      redirectBack();
-    } catch (error) {
-      console.error('Error deleting question:', error);
-      showModal.value = false;
-    }
-  }
-};
-
 const cancelDelete = () => {
   showModal.value = false;
   deleteId.value = null;
   deleteTitle.value = '';
 };
 
-onMounted(() => {
-  fetchQuestion();
-  fetchComments();
-});
-
-const isValidImage = (img?: string): boolean => {
-  if (!img) return false;
-  const trimmed = img.trim().toLowerCase();
-  if (!trimmed || trimmed === 'null' || trimmed === 'undefined') return false;
-  if (trimmed === 'default.jpg') return false;  // ไม่แสดงรูป default
-  return true;
+const handleDelete = async () => {
+  if (!deleteId.value) return;
+  try {
+    const token = localStorage.getItem('token');
+    await axios.delete(`http://localhost:3000/questions/${deleteId.value}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    showModal.value = false;
+    redirectBack();
+  } catch (err) {
+    console.error('Error deleting question:', err);
+    showModal.value = false;
+  }
 };
 
-// profileImageUrl receive user.image from localStorage
+const redirectBack = () => {
+  router.push(from === 'admin' ? '/admin/question' : '/questions');
+};
+
+const isValidImage = (img?: string): boolean => {
+  const trimmed = img?.trim().toLowerCase();
+  return !!(trimmed && trimmed !== 'null' && trimmed !== 'undefined' && trimmed !== 'default.jpg');
+};
 
 const profileImageUrl = computed(() => {
-  const image = user.value?.image;
-  if (!isValidImage(image) || image === 'default.jpg') {
-    return null;
-  }
+  if (!user.value || !isValidImage(user.value.image)) return null;
+
+  const image = user.value.image;
   return image.startsWith('http')
     ? image
     : `http://localhost:9000/iterninsight/${image}?t=${Date.now()}`;
 });
-
-
 </script>
-
-
 
 <template>
   <div class="font-Prompt flex flex-col w-full space-y-2 p-2 sm:px-12 md:px-16 lg:px-32 lg:py-4 xl:px-56 2xl:px-96">
@@ -313,13 +287,16 @@ const profileImageUrl = computed(() => {
             class="flex items-center gap-2 group">
             <div class="w-10 h-10 rounded-full flex items-center justify-center border overflow-hidden">
               <template v-if="isValidImage(cmt.user?.image)">
-  <img :src="cmt.user.image.startsWith('http') ? cmt.user.image : `http://localhost:9000/iterninsight/${cmt.user.image}`" alt="Profile" class="w-10 h-10 rounded-full object-cover border" />
-</template>
-<template v-else>
-  <div class="w-10 h-10 rounded-full bg-[#00465e] text-white flex items-center justify-center text-xl font-bold">
-    {{ cmt.user?.name?.charAt(0).toUpperCase() || '?' }}
-  </div>
-</template>
+                <img
+                  :src="cmt.user.image.startsWith('http') ? cmt.user.image : `http://localhost:9000/iterninsight/${cmt.user.image}`"
+                  alt="Profile" class="w-10 h-10 rounded-full object-cover border" />
+              </template>
+              <template v-else>
+                <div
+                  class="w-10 h-10 rounded-full bg-[#00465e] text-white flex items-center justify-center text-xl font-bold">
+                  {{ cmt.user?.name?.charAt(0).toUpperCase() || '?' }}
+                </div>
+              </template>
             </div>
             <div>
               <strong class="text-xl font-bold text-hightlight group-hover:underline">

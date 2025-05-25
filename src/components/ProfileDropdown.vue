@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, watch, computed } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
+import { useRouter, useRoute, RouterLink } from 'vue-router';
 import editIcon from '@/assets/EditProfile.png';
 import logoutIcon from '@/assets/logout.png';
 
@@ -55,15 +55,15 @@ const goToEditProfile = () => {
 const isValidImage = (img?: string): boolean => {
   if (!img) return false;
   const trimmed = img.trim().toLowerCase();
-  return trimmed && trimmed !== 'null' && trimmed !== 'undefined' && trimmed !== '';
+  return trimmed !== '' && trimmed !== 'null' && trimmed !== 'undefined' && trimmed !== 'default.jpg';
 };
 
 const profileImageUrl = computed(() => {
   const image = user.value?.image;
-  if (!isValidImage(image) || image === 'default.jpg') {
+  if (!isValidImage(image)) {
     return null;
   }
-  return image.startsWith('http')
+  return image!.startsWith('http')
     ? image
     : `http://localhost:9000/iterninsight/${image}?t=${Date.now()}`;
 });
@@ -82,7 +82,6 @@ const profileImageUrl = computed(() => {
           {{ user?.name ? user.name.charAt(0).toUpperCase() : '?' }}
         </span>
       </div>
-
     </div>
 
     <!-- Dropdown Menu -->

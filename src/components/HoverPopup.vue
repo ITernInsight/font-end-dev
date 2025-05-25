@@ -26,12 +26,25 @@
 </template>
 
 <script setup lang="ts">
-defineProps({ user: Object });
+interface User {
+  id: number;
+  email: string;
+  username?: string;
+  name: string;
+  phone?: string;
+  position: string;
+  description: string;
+  image: string;
+}
+
+const props = defineProps<{ user: User }>();
+
+const user = props.user;
 
 const isValidImage = (img?: string): boolean => {
   if (!img) return false;
   const trimmed = img.trim().toLowerCase();
-  return trimmed && trimmed !== 'null' && trimmed !== 'undefined' && trimmed !== 'default.jpg';
+  return trimmed !== '' && trimmed !== 'null' && trimmed !== 'undefined' && trimmed !== 'default.jpg';
 };
 
 const getImageUrl = (img: string) => {

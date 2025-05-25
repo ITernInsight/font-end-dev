@@ -9,9 +9,10 @@ const router = useRouter()
 const isLoggedIn = ref(false)
 
 const checkLoginStatus = () => {
-  const user = localStorage.getItem('user')
+  const userStr = localStorage.getItem('user')
   try {
-    isLoggedIn.value = !!JSON.parse(user)
+    const user = userStr ? JSON.parse(userStr) : null
+    isLoggedIn.value = !!user
   } catch {
     isLoggedIn.value = false
   }
@@ -25,7 +26,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   window.removeEventListener('user-logged-in', checkLoginStatus)
-
+  window.removeEventListener('user-logged-out', checkLoginStatus)
 })
 
 // ตรวจสอบการเปลี่ยนเส้นทาง
@@ -50,12 +51,12 @@ watch(
     <ProfileDropdown v-if="isLoggedIn" />
 
     <!-- แสดงปุ่ม Log In ถ้ายังไม่ได้ login และไม่ได้อยู่หน้า login, register, forgot-password -->
-    <button v-if="!isLoggedIn && route.name !== 'login' && route.name !== 'register' && route.name !== 'ForgotPassword'"
+    <button
+      v-if="!isLoggedIn && route.name !== 'login' && route.name !== 'register' && route.name !== 'ForgotPassword'"
       @click="router.push('/login')"
       class="text-white text-xs font-bold bg-gradient-to-b from-button px-4 py-1.5 h-fit to-button/50 shadow-md rounded-lg lg:text-sm">
       Log In
     </button>
-
   </header>
 
   <RouterView />
