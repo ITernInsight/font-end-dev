@@ -65,7 +65,7 @@ onMounted(() => {
 const fetchQuestion = async () => {
   try {
     const token = localStorage.getItem('token');
-    const res = await axios.get(`https://capstone24.sit.kmutt.ac.th/un3/api/questions/${id}`, {
+    const res = await axios.get(`http://localhost:3000/questions/${id}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     question.value = res.data || null;
@@ -76,7 +76,7 @@ const fetchQuestion = async () => {
 
 const fetchComments = async () => {
   try {
-    const res = await axios.get(`https://capstone24.sit.kmutt.ac.th/un3/api/questions/${id}/comment`);
+    const res = await axios.get(`http://localhost:3000/questions/${id}/comment`);
     comments.value = Array.isArray(res.data.comments) ? res.data.comments.reverse() : [];
   } catch (err) {
     console.error('Error fetching comments:', err);
@@ -88,7 +88,7 @@ const submitComment = async () => {
   const now = new Date();
   try {
     const res = await axios.post(
-      `https://capstone24.sit.kmutt.ac.th/un3/api/questions/${id}/comment`,
+      `http://localhost:3000/questions/${id}/comment`,
       {
         text: commentText.value,
         date: now,
@@ -129,7 +129,7 @@ const saveCommentEdit = async () => {
   try {
     const token = localStorage.getItem('token');
     await axios.put(
-      `https://capstone24.sit.kmutt.ac.th/un3/api/questions/${id}/comment/${editCommentId.value}`,
+      `http://localhost:3000/questions/${id}/comment/${editCommentId.value}`,
       { text: editText.value },
       { headers: { Authorization: `Bearer ${token}` } }
     );
@@ -148,7 +148,7 @@ const confirmDeleteComment = (id: number) => {
 const deleteComment = async () => {
   try {
     const token = localStorage.getItem('token');
-    await axios.delete(`https://capstone24.sit.kmutt.ac.th/un3/api/questions/${id}/comment/${deleteCommentId.value}`,
+    await axios.delete(`http://localhost:3000/questions/${id}/comment/${deleteCommentId.value}`,
       { headers: { Authorization: `Bearer ${token}` } }
     );
     showCommentDelete.value = false;
@@ -183,7 +183,7 @@ const handleDelete = async () => {
   if (!deleteId.value) return;
   try {
     const token = localStorage.getItem('token');
-    await axios.delete(`https://capstone24.sit.kmutt.ac.th/un3/api/questions/${deleteId.value}`, {
+    await axios.delete(`http://localhost:3000/questions/${deleteId.value}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     showModal.value = false;
@@ -204,11 +204,12 @@ const isValidImage = (img?: string): boolean => {
 };
 
 const profileImageUrl = computed(() => {
-  const img = user.value?.image;
-  if (!img || !isValidImage(img)) return null;
-  return img.startsWith('http')
-    ? img
-    : `http://localhost:9000/iterninsight/${img}?t=${Date.now()}`;
+  if (!user.value || !isValidImage(user.value.image)) return null;
+
+  const image = user.value.image;
+  return image.startsWith('http')
+    ? image
+    : `http://localhost:9000/iterninsight/${image}?t=${Date.now()}`;
 });
 </script>
 
@@ -284,17 +285,20 @@ const profileImageUrl = computed(() => {
           @mouseleave="hoveredUserId = null">
           <router-link v-if="cmt.user" :to="{ path: `/users/${cmt.user.id}`, query: { from: fullPath } }"
             class="flex items-center gap-2 group">
-            <div class="w-10 h-10 rounded-full overflow-hidden">
-  <template v-if="profileImageUrl">
-    <img :src="profileImageUrl" alt="Profile" class="w-full h-full object-cover rounded-full" />
-  </template>
-  <template v-else>
-    <div
-      class="w-10 h-10 rounded-full bg-[#00465e] text-white flex items-center justify-center text-xl font-bold">
-      {{ user?.name?.charAt(0)?.toUpperCase() || '?' }}
-    </div>
-  </template>
-</div>
+            <div class="w-10 h-10 rounded-full flex items-center justify-center border overflow-hidden">
+              <template v-if="isValidImage(cmt.user?.image)">
+                <img :src="cmt.user.image.startsWith('http')
+                  ? cmt.user.image
+                  : `http://localhost:9000/iterninsight/${cmt.user.image}`
+                  " alt="Profile" class="w-10 h-10 rounded-full object-cover border" />
+              </template>
+              <template v-else>
+                <div
+                  class="w-10 h-10 rounded-full bg-[#00465e] text-white flex items-center justify-center text-xl font-bold">
+                  {{ cmt.user?.name?.charAt(0).toUpperCase() || '?' }}
+                </div>
+              </template>
+            </div>
             <div>
               <strong class="text-xl font-bold text-hightlight group-hover:underline">
                 {{ cmt.user?.name || 'Unknown' }}

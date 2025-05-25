@@ -91,7 +91,7 @@ const uploadFile = async () => {
     if (!token) throw new Error('Token ไม่ถูกต้อง กรุณาเข้าสู่ระบบใหม่')
 
     const response = await axios.post(
-      'https://capstone24.sit.kmutt.ac.th/un3/api/file-upload/single',
+      'http://localhost:3000/file-upload/single',
       formData,
       {
         headers: {
@@ -108,7 +108,7 @@ const uploadFile = async () => {
 
     // อัปเดตรูปใน backend
     await axios.post(
-      'https://capstone24.sit.kmutt.ac.th/un3/api/login/update_image',
+      'http://localhost:3000/login/update_image',
       {
         email: user.value.email,
         imageUrl: filename,
@@ -152,7 +152,7 @@ const { photoUrl, ...userDataToSend } = rawUser;
 
 void photoUrl; // ป้องกัน warning ว่า photoUrl ไม่ได้ใช้
 
-await axios.put(`https://capstone24.sit.kmutt.ac.th/un3/api/users/${id}`, userDataToSend, {
+await axios.put(`http://localhost:3000/users/${id}`, userDataToSend, {
   headers: { Authorization: `Bearer ${token}` }
 });
 

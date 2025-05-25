@@ -95,7 +95,7 @@ const EditAnnoucement = async () => {
     }
 
     const response = await axios.put(
-      `https://capstone24.sit.kmutt.ac.th/un3/api/posts/${postId}`,
+      `http://localhost:3000/posts/${postId}`,
       {
         title: title.value,
         description: description.value,
@@ -175,7 +175,7 @@ const fetchPostDetail = async () => {
       throw new Error('Unauthorized: No token found');
     }
 
-    const response = await axios.get(`https://capstone24.sit.kmutt.ac.th/un3/api/posts/${postId}`, {
+    const response = await axios.get(`http://localhost:3000/posts/${postId}`, {
       headers: {
         Authorization: `Bearer ${token}`, // เพิ่ม JWT Token ใน Header
       },
@@ -227,7 +227,7 @@ const fetchPostDetail = async () => {
 
 const fetchCompany = async () => {
   try {
-    const response = await axios.get<Company[]>('https://capstone24.sit.kmutt.ac.th/un3/api/companies')
+    const response = await axios.get<Company[]>('http://localhost:3000/companies')
     companies.value = response.data
   } catch (error) {
     console.error('Error fetching companies:', error)
