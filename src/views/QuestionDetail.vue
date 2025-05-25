@@ -204,12 +204,11 @@ const isValidImage = (img?: string): boolean => {
 };
 
 const profileImageUrl = computed(() => {
-  if (!user.value || !isValidImage(user.value.image)) return null;
-
-  const image = user.value.image;
-  return image.startsWith('http')
-    ? image
-    : `http://localhost:9000/iterninsight/${image}?t=${Date.now()}`;
+  const img = user.value?.image;
+  if (!img || !isValidImage(img)) return null;
+  return img.startsWith('http')
+    ? img
+    : `http://localhost:9000/iterninsight/${img}?t=${Date.now()}`;
 });
 </script>
 
@@ -285,19 +284,17 @@ const profileImageUrl = computed(() => {
           @mouseleave="hoveredUserId = null">
           <router-link v-if="cmt.user" :to="{ path: `/users/${cmt.user.id}`, query: { from: fullPath } }"
             class="flex items-center gap-2 group">
-            <div class="w-10 h-10 rounded-full flex items-center justify-center border overflow-hidden">
-              <template v-if="isValidImage(cmt.user?.image)">
-                <img
-                  :src="cmt.user.image.startsWith('http') ? cmt.user.image : `http://localhost:9000/iterninsight/${cmt.user.image}`"
-                  alt="Profile" class="w-10 h-10 rounded-full object-cover border" />
-              </template>
-              <template v-else>
-                <div
-                  class="w-10 h-10 rounded-full bg-[#00465e] text-white flex items-center justify-center text-xl font-bold">
-                  {{ cmt.user?.name?.charAt(0).toUpperCase() || '?' }}
-                </div>
-              </template>
-            </div>
+            <div class="w-10 h-10 rounded-full overflow-hidden">
+  <template v-if="profileImageUrl">
+    <img :src="profileImageUrl" alt="Profile" class="w-full h-full object-cover rounded-full" />
+  </template>
+  <template v-else>
+    <div
+      class="w-10 h-10 rounded-full bg-[#00465e] text-white flex items-center justify-center text-xl font-bold">
+      {{ user?.name?.charAt(0)?.toUpperCase() || '?' }}
+    </div>
+  </template>
+</div>
             <div>
               <strong class="text-xl font-bold text-hightlight group-hover:underline">
                 {{ cmt.user?.name || 'Unknown' }}

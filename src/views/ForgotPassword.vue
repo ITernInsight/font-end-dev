@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import axios from 'axios'
 import viewIcon from '@/assets/view.png'
 import hideIcon from '@/assets/hide.png'
+import type { AxiosError } from 'axios'
 
 const email = ref('')
 const verifyCode = ref('')
@@ -26,7 +27,8 @@ const sendVerifyCode = async () => {
     message.value = response.data.message || 'Verification code sent.'
     showForm.value = true
   } catch (error: unknown) {
-    modalMessage.value = error.response?.data?.message || 'เกิดข้อผิดพลาด'
+    const err = error as AxiosError<{ message: string }>
+    modalMessage.value = err.response?.data?.message || 'เกิดข้อผิดพลาด'
     isSuccess.value = false
     showModal.value = true
   } finally {
@@ -47,7 +49,8 @@ const resetPassword = async () => {
     isSuccess.value = true
     showModal.value = true
   } catch (error: unknown) {
-    modalMessage.value = error.response?.data?.message || 'เกิดข้อผิดพลาด'
+    const err = error as AxiosError<{ message: string }>
+    modalMessage.value = err.response?.data?.message || 'เกิดข้อผิดพลาด'
     isSuccess.value = false
     showModal.value = true
   } finally {

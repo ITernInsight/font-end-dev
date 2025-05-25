@@ -13,10 +13,8 @@ interface UserData {
   description?: string
   photoUrl: string
   image?: string;
-
 }
 
-// const uploadLoading = ref(false)
 const router = useRouter()
 
 const defaultUserData: UserData = {
@@ -38,6 +36,7 @@ onMounted(() => {
   if (stored) {
     const parsed = JSON.parse(stored);
     user.value = parsed;
+    originalUser.value = {...parsed}; // เก็บสำรองของเดิมไว้เช็คเปลี่ยนแปลง
   }
 });
 
@@ -45,53 +44,6 @@ const hasChanges = computed(() => {
   return JSON.stringify(user.value) !== JSON.stringify(originalUser.value)
 })
 
-const saveAll = async () => {
-  try {
-    const token = localStorage.getItem('token')
-    const id = user.value.id
-    if (!token || !id) throw new Error('No token or user ID found.')
-
-    // ถ้ามี selectedFile ให้ upload ก่อน
-    if (selectedFile.value) {
-      await uploadFile()
-    }
-
-    // ✅ ใช้ toRaw เพื่อลบ photoUrl ออก
-    const rawUser = toRaw(user.value);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { photoUrl, ...userDataToSend } = rawUser;
-
-    await axios.put(`https://capstone24.sit.kmutt.ac.th/un3/api/users/${id}`, userDataToSend, {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-
-    originalUser.value = { ...user.value }
-    localStorage.setItem('user', JSON.stringify(user.value))
-    window.dispatchEvent(new Event('user-logged-in'))
-
-    router.back()
-  } catch (err: unknown) {
-    let message = 'An error occurred'
-
-    if (
-      typeof err === 'object' &&
-      err !== null &&
-      'response' in err &&
-      typeof (err as Record<string, unknown>).response === 'object'
-    ) {
-      const response = (err as { response?: { data?: { message?: string } } }).response
-      message = response?.data?.message || 'An error occurred'
-    } else if (err instanceof Error) {
-      message = err.message
-    }
-
-    if (message.includes('entity too large')) {
-      showModalError('The file size exceeds the 2MB limit. Please select a smaller file.')
-    } else {
-      showModalError('Error: ' + message)
-    }
-  }
-}
 const selectedFile = ref<File | null>(null)
 
 const handlePhotoChange = (event: Event) => {
@@ -101,12 +53,12 @@ const handlePhotoChange = (event: Event) => {
     const allowedTypes = ['image/png', 'image/jpeg']
 
     if (!allowedTypes.includes(file.type)) {
-      showModalError('Only PNG and JPG image files are allowed.')
+      showModalError('รองรับเฉพาะไฟล์รูป JPG และ PNG เท่านั้น')
       return
     }
 
     if (file.size > maxSize) {
-      showModalError('The file size exceeds the 2MB limit. Please select a smaller file.')
+      showModalError('ไฟล์รูปเกิน 2MB กรุณาเลือกไฟล์ขนาดเล็กลง')
       return
     }
 
@@ -116,7 +68,7 @@ const handlePhotoChange = (event: Event) => {
     }
     reader.readAsDataURL(file)
     selectedFile.value = file
-    console.log('Selected file:')
+    console.log('Selected file:', file)
   }
 }
 
@@ -129,62 +81,124 @@ const showModalError = (msg: string) => {
 }
 
 const uploadFile = async () => {
-  if (!selectedFile.value) return alert('Please select a file first.');
+  if (!selectedFile.value) return alert('กรุณาเลือกไฟล์ก่อน')
 
-  const formData = new FormData();
-  formData.append('image', selectedFile.value);
+  const formData = new FormData()
+  formData.append('image', selectedFile.value)  // ชื่อ field ต้องตรงกับ backend
 
   try {
-    const response = await axios.post('https://capstone24.sit.kmutt.ac.th/un3/api/file-upload/single', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
+    const token = localStorage.getItem('token')
+    if (!token) throw new Error('Token ไม่ถูกต้อง กรุณาเข้าสู่ระบบใหม่')
 
-    console.log('Upload response:', response.data);
+    const response = await axios.post(
+      'https://capstone24.sit.kmutt.ac.th/un3/api/file-upload/single',
+      formData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          // ไม่ต้องตั้ง 'Content-Type' axios จะจัดให้เอง
+        },
+      }
+    )
 
-    // ✅ แยกชื่อไฟล์มาเก็บ
-    const filename = response.data.image_url.split('/').pop();
-    console.log('Image filename:', filename);
+    console.log('Upload response:', response.data)
 
-    // ✅ ส่งไปอัปเดต backend
-    await axios.post('https://capstone24.sit.kmutt.ac.th/un3/api/login/update_image', {
-      email: user.value.email,
-      imageUrl: filename
-    });
+    const filename = response.data.image_url.split('/').pop()
+    console.log('Image filename:', filename)
 
-    // ✅ อัปเดตข้อมูล user ฝั่ง frontend
-    user.value.image = filename;
+    // อัปเดตรูปใน backend
+    await axios.post(
+      'https://capstone24.sit.kmutt.ac.th/un3/api/login/update_image',
+      {
+        email: user.value.email,
+        imageUrl: filename,
+      },
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    )
 
-    const stored = localStorage.getItem('user');
+    user.value.image = filename
+
+    // อัปเดต localStorage ด้วย
+    const stored = localStorage.getItem('user')
     if (stored) {
-      const parsedUser = JSON.parse(stored);
-      parsedUser.image = filename;
-      localStorage.setItem('user', JSON.stringify(parsedUser));
+      const parsedUser = JSON.parse(stored)
+      parsedUser.image = filename
+      localStorage.setItem('user', JSON.stringify(parsedUser))
     }
 
-    window.dispatchEvent(new Event('user-logged-in'));
-    // router.push('/posts');
-    alert('Upload successful!');
-
+    window.dispatchEvent(new Event('user-logged-in'))
+    alert('อัปโหลดรูปสำเร็จ!')
 
   } catch (error) {
-    console.error('Upload failed:', error);
+    console.error('Upload failed:', error)
+    showModalError('การอัปโหลดล้มเหลว กรุณาลองใหม่อีกครั้ง')
   }
-};
+}
 
-const profileImageUrl = computed(() => {
-  const filename = user.value?.image || '';
-  // if selectedFile is not null, use it
-  if (selectedFile.value) {
-    return URL.createObjectURL(selectedFile.value);
-  }
-  if (filename && filename !== 'null' && filename !== 'undefined') {
-    // ป้องกัน cache และตรวจรูปได้ทันทีหลัง upload
-    return `http://localhost:9000/iterninsight/${filename}?t=${Date.now()}`;
-  }
-  return 'https://cdn-icons-png.flaticon.com/512/1144/1144760.png';
+const saveAll = async () => {
+  try {
+    const token = localStorage.getItem('token')
+    const id = user.value.id
+    if (!token || !id) throw new Error('ไม่มี token หรือ id ผู้ใช้')
+
+    if (selectedFile.value) {
+      await uploadFile()
+    }
+
+const rawUser = toRaw(user.value);
+const { photoUrl, ...userDataToSend } = rawUser;
+
+void photoUrl; // ป้องกัน warning ว่า photoUrl ไม่ได้ใช้
+
+await axios.put(`https://capstone24.sit.kmutt.ac.th/un3/api/users/${id}`, userDataToSend, {
+  headers: { Authorization: `Bearer ${token}` }
 });
 
+    originalUser.value = { ...user.value }
+    localStorage.setItem('user', JSON.stringify(user.value))
+    window.dispatchEvent(new Event('user-logged-in'))
+
+    router.back()
+  } catch (err: unknown) {
+    let message = 'เกิดข้อผิดพลาด'
+
+    if (
+      typeof err === 'object' &&
+      err !== null &&
+      'response' in err &&
+      typeof (err as Record<string, unknown>).response === 'object'
+    ) {
+      const response = (err as { response?: { data?: { message?: string } } }).response
+      message = response?.data?.message || 'เกิดข้อผิดพลาด'
+    } else if (err instanceof Error) {
+      message = err.message
+    }
+
+    if (message.includes('entity too large')) {
+      showModalError('ไฟล์รูปเกินขนาด 2MB กรุณาเลือกไฟล์ใหม่')
+    } else if (message.includes('Unauthorized')) {
+      showModalError('โปรดเข้าสู่ระบบใหม่ เนื่องจากเซสชันหมดอายุ')
+    } else {
+      showModalError('ข้อผิดพลาด: ' + message)
+    }
+  }
+}
+
+const profileImageUrl = computed(() => {
+  const filename = user.value?.image || ''
+  if (selectedFile.value) {
+    return URL.createObjectURL(selectedFile.value)
+  }
+  if (filename && filename !== 'null' && filename !== 'undefined') {
+    return `http://localhost:9000/iterninsight/${filename}?t=${Date.now()}`
+  }
+  return 'https://cdn-icons-png.flaticon.com/512/1144/1144760.png'
+})
+
 </script>
+
 
 <template>
   <div class="bg-white shadow-md rounded-lg max-w-md mx-auto my-8">
