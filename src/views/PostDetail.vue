@@ -29,7 +29,7 @@ const fetchData = async () => {
   try {
     console.log('postId:', postId)
     // ระบุ full URL หรือ baseURL ของ axios ให้ถูกต้อง
-    const response = await axios.get(`https://capstone24.sit.kmutt.ac.th/un3/api/posts/${postId}`);
+    const response = await axios.get(`http://localhost:3000/posts/${postId}`);
     const postData = response.data;
 
     if (!postData) {

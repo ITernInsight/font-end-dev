@@ -15,7 +15,7 @@ const isBookmarkView = ref(false)
 const fetchBookmarkedPosts = async () => {
   try {
     isLoading.value = true
-    const response = await axios.get<Post[]>('https://capstone24.sit.kmutt.ac.th/un3/api/posts')
+    const response = await axios.get<Post[]>('http://localhost:3000/posts')
     posts.value = response.data
       .filter((post) => post.isBookmarked)
       .map((post) => ({
@@ -65,7 +65,7 @@ const endDateSelected = ref('') // end date filter
 
 const fetchData = async () => {
   try {
-    const response = await axios.get<Post[]>('https://capstone24.sit.kmutt.ac.th/un3/api/posts')
+    const response = await axios.get<Post[]>('http://localhost:3000/posts')
 
     // เตรียม token ไว้ใช้สำหรับตรวจสอบ bookmark
     const token = localStorage.getItem('token')
@@ -91,7 +91,7 @@ const fetchData = async () => {
       const bookmarkStatuses = await Promise.all(
         posts.value.map(async (post) => {
           try {
-            const res = await axios.get(`https://capstone24.sit.kmutt.ac.th/un3/api/posts/${post.id}/bookmark`, {
+            const res = await axios.get(`http://localhost:3000/posts/${post.id}/bookmark`, {
               headers: {
                 Authorization: `Bearer ${token}`,
               },
@@ -128,7 +128,7 @@ const toggleBookmark = async (post: Post) => {
   try {
     await axios({
       method: post.isBookmarked ? 'DELETE' : 'POST',
-      url: `https://capstone24.sit.kmutt.ac.th/un3/api/posts/${post.id}/bookmark`,
+      url: `http://localhost:3000/posts/${post.id}/bookmark`,
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -189,7 +189,7 @@ onMounted(async () => {
   try {
     if (route.query.bookmarked === 'true') {
       // ✅ ดึงเฉพาะโพสต์ที่ผู้ใช้ bookmark ไว้
-      const res = await axios.get('https://capstone24.sit.kmutt.ac.th/un3/api/posts/bookmarks/me', {
+      const res = await axios.get('http://localhost:3000/posts/bookmarks/me', {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -259,7 +259,7 @@ onMounted(async () => {
     <div v-if="filteredReviews.length > 0" class="relative">
       <RouterLink :to="`posts/${filteredReviews[0].id}`"
         class="flex flex-row border border-border gap-x-4 pr-4 items-start h-full relative">
-        <img src="https://capstone24.sit.kmutt.ac.th/un3/iterninsight/33ba28852218564451f9b6ef0d8d1ca1.png"
+        <img src="http://localhost:9000/iterninsight/33ba28852218564451f9b6ef0d8d1ca1.png"
           class="bg-gray-200 w-[120px] aspect-[3/2] border-r border-border md:w-[200px] lg:w-[280px] xl:w-[320px] 2xl:w-[400px]" />
         <div class="flex flex-col gap-y-1 w-full py-2 xl:gap-y-2">
           <div class="text-hightlight font-bold text-sm w-full md:text-lg lg:text-xl">
@@ -297,7 +297,7 @@ onMounted(async () => {
             Read more
           </button>
         </div>
-        <img src="https://capstone24.sit.kmutt.ac.th/un3/iterninsight/9f349a52e3642853ef6756f52f75cd90.png"
+        <img src="http://localhost:9000/iterninsight/9f349a52e3642853ef6756f52f75cd90.png"
           class="bg-gray-200 w-[120px] aspect-[3/2] border-r border-border md:w-[200px] lg:w-[280px] xl:w-[320px] 2xl:w-[400px]" />
       </RouterLink>
       <button @click.stop.prevent="toggleBookmark(filteredReviews[1])" class="absolute top-2 right-2 z-10">
