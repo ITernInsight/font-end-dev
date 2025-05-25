@@ -65,7 +65,7 @@ const profileImageUrl = computed(() => {
   }
   return image!.startsWith('http')
     ? image
-    : `http://localhost:9000/iterninsight/${image}?t=${Date.now()}`;
+    : `https://capstone24.sit.kmutt.ac.th/un3/iterninsight/${image}?t=${Date.now()}`;
 });
 </script>
 

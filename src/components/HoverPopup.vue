@@ -48,6 +48,6 @@ const isValidImage = (img?: string): boolean => {
 };
 
 const getImageUrl = (img: string) => {
-  return img.startsWith('http') ? img : `http://localhost:9000/iterninsight/${img}`;
+  return img.startsWith('http') ? img : `https://capstone24.sit.kmutt.ac.th/un3/iterninsight/${img}`;
 };
 </script>

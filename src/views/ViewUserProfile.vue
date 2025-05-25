@@ -21,7 +21,7 @@ const user = ref<User | null>(null);
 onMounted(async () => {
   const userId = route.params.id
   try {
-    const res = await axios.get(`http://localhost:3000/users/${userId}`)
+    const res = await axios.get(`https://capstone24.sit.kmutt.ac.th/un3/api/users/${userId}`)
     user.value = res.data
   } catch (err) {
     console.error('Error fetching user:', err)
@@ -39,7 +39,7 @@ const imageUrl = computed(() => {
   const image = user.value.image;
   return image.startsWith('http')
     ? image
-    : `http://localhost:9000/iterninsight/${image}`;
+    : `https://capstone24.sit.kmutt.ac.th/un3/iterninsight/${image}`;
 });
 
 
