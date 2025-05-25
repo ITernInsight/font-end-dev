@@ -65,7 +65,7 @@ onMounted(() => {
 const fetchQuestion = async () => {
   try {
     const token = localStorage.getItem('token');
-    const res = await axios.get(`http://localhost:3000/questions/${id}`, {
+    const res = await axios.get(`https://capstone24.sit.kmutt.ac.th/un3/api/questions/${id}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     question.value = res.data || null;
@@ -76,7 +76,7 @@ const fetchQuestion = async () => {
 
 const fetchComments = async () => {
   try {
-    const res = await axios.get(`http://localhost:3000/questions/${id}/comment`);
+    const res = await axios.get(`https://capstone24.sit.kmutt.ac.th/un3/api/questions/${id}/comment`);
     comments.value = Array.isArray(res.data.comments) ? res.data.comments.reverse() : [];
   } catch (err) {
     console.error('Error fetching comments:', err);
@@ -88,7 +88,7 @@ const submitComment = async () => {
   const now = new Date();
   try {
     const res = await axios.post(
-      `http://localhost:3000/questions/${id}/comment`,
+      `https://capstone24.sit.kmutt.ac.th/un3/api/questions/${id}/comment`,
       {
         text: commentText.value,
         date: now,
@@ -129,7 +129,7 @@ const saveCommentEdit = async () => {
   try {
     const token = localStorage.getItem('token');
     await axios.put(
-      `http://localhost:3000/questions/${id}/comment/${editCommentId.value}`,
+      `https://capstone24.sit.kmutt.ac.th/un3/api/questions/${id}/comment/${editCommentId.value}`,
       { text: editText.value },
       { headers: { Authorization: `Bearer ${token}` } }
     );
@@ -148,7 +148,7 @@ const confirmDeleteComment = (id: number) => {
 const deleteComment = async () => {
   try {
     const token = localStorage.getItem('token');
-    await axios.delete(`http://localhost:3000/questions/${id}/comment/${deleteCommentId.value}`,
+    await axios.delete(`https://capstone24.sit.kmutt.ac.th/un3/api/questions/${id}/comment/${deleteCommentId.value}`,
       { headers: { Authorization: `Bearer ${token}` } }
     );
     showCommentDelete.value = false;
@@ -183,7 +183,7 @@ const handleDelete = async () => {
   if (!deleteId.value) return;
   try {
     const token = localStorage.getItem('token');
-    await axios.delete(`http://localhost:3000/questions/${deleteId.value}`, {
+    await axios.delete(`https://capstone24.sit.kmutt.ac.th/un3/api/questions/${deleteId.value}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     showModal.value = false;
